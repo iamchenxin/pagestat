@@ -61,31 +61,34 @@ function words_analyze(data){
     */
     var wd_filter = wordlisttxt.split(",");
 
-    var outstr = "wd_filter = " +wd_filter.length ;
-    outstr+="<br/>";
+
     jQuery("#pagestat_txtout").html(outstr);
 
     var texttmp = jQuery("#wiki__text").val();
     var text = texttmp.toLocaleLowerCase();
     var txlist= text.split(/[^\w\-_]+/);
+    var outstr = "This page has " +txlist.length +" words.";
     txlist.sort();
 
 
     var i=1;
     var count=1;
     var tx_countset={};
+    var unique_words=0;
     var regx =new RegExp("[^a-z]");
     // order and count every word
     for(;i<txlist.length;i++){
         if(regx.test(txlist[i])!=true) {  //ignore number and symbol
             if (txlist[i] != txlist[i - 1]) {
                 tx_countset[txlist[i - 1]] = count;
+                unique_words+=1;
                 count = 1;
             } else {
                 count += 1;
             }
         }
     }
+    outstr+="and "+unique_words+" unique words.The words statistics:<br/>";
    outstr += JSON.stringify(tx_countset,null,"\t")+"<br/><br/><br/>";
     jQuery("#pagestat_txtout").html(outstr);
     var k=0;
@@ -105,20 +108,21 @@ function words_analyze(data){
 
 
 
-    outstr+= "words_out_list = " +words_out_list.length+"filter conut="+wd_filter.length+"<br/>" ;
+    outstr+= "Un match words = " +words_out_list.length+",Your filter conut="+wd_filter.length+"<br/>" ;
 //    rtstr += JSON.stringify(words_out_list,null,"\t")+"<br/>";
     var rtstr=words_out_list.join(",    ");
     jQuery("#pagestat_edit").val(rtstr);
     jQuery("#pagestat_edit").slideDown(500);
 
     jQuery("#pagestat_txtout").html(outstr);
+    /*
     outstr+="<br/>";
     var xx;
     for(xx in JSINFO){
         outstr+=",key = "+xx;
         outstr+=",value= "+JSINFO[xx];
     }
-    jQuery("#pagestat_txtout").html(outstr);
+    */
 }
 
 function insert_words_todk(){
