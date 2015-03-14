@@ -4,5 +4,5 @@
  * Time: 5:47
  */
 
-$meta['wordlist_ns']      = "user:admin:";
-$meta['userwords_ns']    =  'user:"@USER@":';
+$conf['wordlist_ns']      = "user:admin:";
+$conf['userwords_ns']    =  'user:@USER@:';

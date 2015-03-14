@@ -1,6 +1,9 @@
 .wordlist{
     color: #99792a;
 }
+#pagestat_div{
+    float: right;
+}
 
 #pagestat_rt{
     position: fixed;
@@ -18,4 +21,15 @@
 }
 #pagestat_ok{
     float: right;
+}
+#pagestat_cancel{
+    float: right;
+}
+
+#pagestat_edit{
+    margin-right: auto;
+    margin-left: auto;
+    width: 99%;
+    height: 400px;
+    display: none;
 }
