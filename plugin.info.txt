@@ -1,0 +1,7 @@
+base    pagestat
+author  iamchenxin
+email   iamchenxin@gmail.com
+date    2015-02-27
+name    pagestat
+desc    Page stat
+url     http://dokuwiki.org/plugin:pagestat
