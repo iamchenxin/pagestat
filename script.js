@@ -1,6 +1,14 @@
 /**
  * Created by iamchenxin on 2015/3/14.
  */
+/*
+ http://stackoverflow.com/questions/1038746/equivalent-of-string-format-in-jquery
+ */
+String.prototype.format = function () {
+    var args = arguments;
+    return this.replace(/\{(\d+)\}/g, function (m, n) { return args[n]; });
+};
+
 function xxeditpsbt_add(){
 
     var $sizect = jQuery('#size__ctl');
@@ -106,8 +114,6 @@ function words_analyze(data){
         words_out_list[words_out_list.length]=x;
     }
 
-
-
     outstr+= "Un match words = " +words_out_list.length+",Your filter conut="+wd_filter.length+"<br/>" ;
 //    rtstr += JSON.stringify(words_out_list,null,"\t")+"<br/>";
     var rtstr=words_out_list.join(",    ");
@@ -130,11 +136,11 @@ function insert_words_todk(){
     var anal_txt= jQuery("#pagestat_edit").val();
     var anal_list=anal_txt.split(",");
     anal_list.sort();
-    var outstr="<WORDLIST>"+anal_list.length+",";
+    var outstr="<WORDLIST>";
     for (var x in anal_list){
         outstr+=anal_list[x].trim()+", ";
     }
-    outstr+="</WORDLIST>\n\n";
+    outstr+="</WORDLIST>"+anal_list.length+"\n\n";
     var edit_txt = jQuery("#wiki__text").val();
     jQuery("#wiki__text").val(outstr+edit_txt);
     jQuery("#pagestat_edit").slideUp(500);
@@ -175,5 +181,126 @@ function sort_wordlist(){
     alert("input words="+word_list.length+",out words="+out_list.length+"repeat words="+re_list.join(", "));
     jQuery("#wiki__text").val(rt_txt);
 }
+//----------------------
+
+
+
+
+//Complement (set theory) ,conjuction
+function wComplement_w(main_sortlist,filt_sortlist){
+    var main_map=make_map_w(main_sortlist);
+
+    var i=0;
+    for(;i<filt_sortlist.length;i++){
+        if(main_map[filt_sortlist[i]]!="undefined"){ // exist both
+            delete main_map[filt_sortlist[i]]; //subtract the both in main_map
+        }
+    }
+    return main_map; //the remaining is complement
+}
+
+function wIntersection_w(sortlistone,sortlisttwo){
+    var main_map = make_map_w(sortlistone);
+    var filt_sortlist=make_unique_list(sortlisttwo);
+
+    var intersect_list=[];
+    var i=0;
+    for(;i<filt_sortlist.length;i++){
+        if(main_map[filt_sortlist[i]]!="undefined"){ // exist both
+            intersect_list[intersect_list.length]=filt_sortlist[i]; //store the same word
+        }
+    }
+    return intersect_list;
+}
+
+function wUnion_w(listone,listtwo){
+    var list_all =listone.concat(listtwo);
+    list_all.sort();
+    var out_list=make_unique_list(list_all);
+    return out_list;
+}
+
+function make_unique_list(ordered_list){
+    var i=1;
+    var count=1;
+    var unique_list=[];
+    var regx =new RegExp("[^a-zA-Z]");
+    //  count every word
+    for(;i<txlist.length;i++){
+        if(regx.test(txlist[i])!=true) {  //ignore number and symbol
+            if (txlist[i] != txlist[i - 1]) {
+                unique_list[unique_list.length]= txlist[i - 1] ;
+                count = 1;
+            } else {
+                count += 1;
+            }
+        }
+    }
+    return unique_list;
+}
+// this function
+function make_map_w(ordered_list){
+    var i=1;
+    var count=1;
+    var tx_countset={};
+    var regx =new RegExp("[^a-zA-Z]");
+    // count every word
+    for(;i<txlist.length;i++){
+        if(regx.test(txlist[i])!=true) {  //ignore number and symbol
+            if (txlist[i] != txlist[i - 1]) {
+                tx_countset[txlist[i - 1]] = count;
+                count = 1;
+            } else {
+                count += 1;
+            }
+        }
+    }
+    return tx_countset;
+}
+
+//
+function get_booklist(){
+
+}
+//--------------UI---------------------
+
+function open_page_write(data){
+
+
+    var mdiv =jQuery("#openpage_rt");
+    mdiv.slideDown(1000);
+    if (data.content.length<3){mdiv.html("Missing word . . .");
+    }else{
+        jQuery("#openpage_txtout").html(data.content);
+    }
+}
+
+function open_page(){
+//    var pageid = jQuery(this).attr("pageid");
+    var pageid = "my:moon";
+    var mdata=new Object();
+    var mdata=new Object();
+    mdata['pageid']=pageid;
+    mdata['call']="ajaxpeon";
+    var url = DOKU_BASE + 'lib/exe/ajax.php';
+    mdata['target']="page";
+    jQuery.ajax({url:url,data:mdata,success:open_page_write,dataType:"jsonp",crossDomain:true});
+}
+
+function init_ui(){
+    /*
+    var divstr='<div id="{0}_rt"><div id="{0}_txtout"></div> <div style="clear: both"></div>\
+     <input id="{0}_ok" name="ok" class="button" type="button" value="ok">\
+        <input id="{0}_cancel" class="button" type="button" value="cancel"> </div> '.format("openpage");
+        */
+    var divstr='<div id="openpage_rt"><div id="openpage_txtout"></div> <div style="clear: both"></div>\
+     <input id="openpage_ok" name="ok" class="button" type="button" value="ok">\
+        <input id="openpage_cancel" class="button" type="button" value="cancel"> </div> ';
+//    alert(divstr);
+    var mmdiv =jQuery(divstr);
+    jQuery('body').append(mmdiv);
+    jQuery(".xxpg_ED").click(open_page);
+}
 
 jQuery(xxeditpsbt_add);
+jQuery(init_ui);

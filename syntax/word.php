@@ -7,21 +7,21 @@
 
 if(!defined('DOKU_INC')) define('DOKU_INC',realpath(dirname(__FILE__).'/../../').'/');
 if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
-require_once(DOKU_PLUGIN.'syntax.php');
+require_once(DOKU_PLUGIN . 'syntax.php');
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism
  * need to inherit from this class
  */
-class syntax_plugin_pagestat extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_pagestat_word extends DokuWiki_Syntax_Plugin {
 
 
 
     public function getType(){ return 'formatting'; }
     public function getAllowedTypes() { return array('formatting', 'substition', 'disabled'); }
     public function getSort(){ return 409; }
-    public function connectTo($mode) { $this->Lexer->addEntryPattern('<WORDLIST.*?>(?=.*?</WORDLIST>)',$mode,'plugin_pagestat'); }
-    public function postConnect() { $this->Lexer->addExitPattern('</WORDLIST>','plugin_pagestat'); }
+    public function connectTo($mode) { $this->Lexer->addEntryPattern('<WORDLIST.*?>(?=.*?</WORDLIST>)',$mode,'plugin_pagestat_word'); }
+    public function postConnect() { $this->Lexer->addExitPattern('</WORDLIST>','plugin_pagestat_word'); }
 
 
     /**
@@ -49,7 +49,6 @@ class syntax_plugin_pagestat extends DokuWiki_Syntax_Plugin {
             list($state,$match) = $data;
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $match="aa";
                     $renderer->doc .= '<span class="wordlist" id="wordlist_'.$match.'">';
                     break;
 
