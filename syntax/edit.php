@@ -14,8 +14,11 @@ class syntax_plugin_pagestat_edit extends DokuWiki_Syntax_Plugin {
     function getType(){ return 'substition';}
     function getPType(){ return 'block';}
     public function getSort() { return 321; }
+    public function getAllowedTypes() { return array('formatting', 'substition', 'disabled'); }
+    public function connectTo($mode) { $this->Lexer->addEntryPattern('<PT.*?>(?=.*?</PT>)',$mode,'plugin_pagestat_edit'); }
+    public function postConnect() { $this->Lexer->addExitPattern('</PT>','plugin_pagestat_edit'); }
 
-    public function connectTo($mode) { $this->Lexer->addSpecialPattern('<PT.*?>',$mode,'plugin_pagestat_edit');}
+
 
 /*
     public function connectTo($mode) { $this->Lexer->addEntryPattern($this->entry_pattern,$mode,'plugin_pagestat_'.$this->getPluginComponent());}
@@ -23,45 +26,52 @@ class syntax_plugin_pagestat_edit extends DokuWiki_Syntax_Plugin {
    function connectTo($mode) { $this->Lexer->addEntryPattern('\+\+\+\+.*?\|(?=.*\+\+\+\+)',$mode,'plugin_folded_div'); }
 */
     public function handle($match, $state, $pos, Doku_Handler $handler){
-        /*
         switch ($state) {
-            case DOKU_LEXER_SPECIAL :
+            case DOKU_LEXER_ENTER :
                 $match = trim(substr($match,3,-1));
-                $pg_count=$pg_count+1;
-                return array($state, $match,$pg_count-1);
+                $arg_list = explode(" ",$match);
+                $this->pg_count=$this->pg_count+1;
+                return array($state, $arg_list,$this->pg_count-1);
 
             case DOKU_LEXER_UNMATCHED :  return array($state, $match);
+            case DOKU_LEXER_EXIT :       return array($state, '');
         }
         return array();
-        */
-        $match = trim(substr($match,3,-1));
-        $arg_list = explode(" ",$match);
-        $this->pg_count=$this->pg_count+1;
-        return array($state, $arg_list,$this->pg_count-1);
     }
 
     public function render($mode, Doku_Renderer $renderer, $data) {
         // $data is what the function handle() return'ed.
         if($mode == 'xhtml'){
             /** @var Doku_Renderer_xhtml $renderer */
-            list($state,$arg_list,$count) = $data;
-            $length = count($arg_list);
-            if($length<1){
-                return true;
-            }
-            $match=$arg_list[0];
-            $arg_count=1;
+            list($state,$match,$count) = $data;
+            switch ($state) {
+                case DOKU_LEXER_ENTER :
+                    $arg_list = $match;
+                    $length = count($arg_list);
+                    if($length<1){
+                        break;
+                    }
+                    $subname=$arg_list[0];
+                    $arg_count=1;
 //            $str =  '<div class="xxpg xxpg_'.$match.'" id="xxpg_'.$match+$count.'"></div>';
-            $str2 = '<div class="xxpg xxpg_'.$match.'" id="xxpg_'.$match.$count.'" ';
-            for(;$arg_count<$length;$arg_count++){
-                $str2.='arg'.$arg_count.'="'.$arg_list[$arg_count].'" ';
+                    $str2 = '<div class="xxpg xxpg_'.$subname.'" id="xxpg_'.$subname.$count.'" ';
+                    for(;$arg_count<$length;$arg_count++){
+                        $str2.='arg'.$arg_count.'="'.$arg_list[$arg_count].'"';
+                    }
+                    $renderer->doc .= $str2.' >';
+                    break;
+
+                case DOKU_LEXER_UNMATCHED :
+                    $renderer->doc .= $renderer->_xmlEntities($match);
+                    break;
+                case DOKU_LEXER_EXIT :
+                    $renderer->doc .= "</div>";
+                    break;
             }
-            $str2.='></div>';
-           $renderer->doc .= $str2;
- //           $renderer->doc .='<div class="xxpg"></div> ';
             return true;
         }
         return false;
     }
+
 
 }
