@@ -327,7 +327,7 @@ PTwindow.prototype.getclientwin=function(){return this.jqwin.children(".pt_clien
 PTwindow.prototype.show=function(){
     if(jQuery("html").hasClass("phone")){
         this.jqwin.css("width","90%");
-        this.jqwin.css("height","auto");
+        this.jqwin.css("height",this.ptheight);
         this.jqwin.css("top",this.pttop);
         this.jqwin.css("left","2%");
     }else{
