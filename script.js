@@ -450,7 +450,7 @@ function parse_book_word(){
     }else{
         var buttonid= jQuery(this).attr("id");
         if(ptw_list[buttonid]==null){
-            var swin =new PTwindow("ptparse","2%","2%","90%","90%");
+            var swin =new PTwindow("ptparse","2%","2%","90%","80%");
             ptw_list[buttonid]=swin;
             swin.createwin(buttonid);
             parse_output = ptw_list[buttonid].getclientwin();

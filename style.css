@@ -70,7 +70,7 @@
 }
 
 .xxpg{
-
+    cursor:pointer;
     float: left;
     margin: 1px;
     border: 1px dashed #999;
