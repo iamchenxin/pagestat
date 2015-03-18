@@ -56,7 +56,7 @@ class syntax_plugin_pagestat_edit extends DokuWiki_Syntax_Plugin {
 //            $str =  '<div class="xxpg xxpg_'.$match.'" id="xxpg_'.$match+$count.'"></div>';
                     $str2 = '<div class="xxpg xxpg_'.$subname.'" id="xxpg_'.$subname.$count.'" ';
                     for(;$arg_count<$length;$arg_count++){
-                        $str2.='arg'.$arg_count.'="'.$arg_list[$arg_count].'"';
+                        $str2.='arg'.$arg_count.'="'.$arg_list[$arg_count].'" ';
                     }
                     $renderer->doc .= $str2.' >';
                     break;

@@ -35,6 +35,24 @@
     display: none;
 }
 
+.pt_window{
+    z-index: 50;
+    position: fixed;
+    background-color: #f1f1f1;
+    box-shadow:0px 0px 0.5em #999;
+    border: 1px solid #eee;
+    padding: 0.5em;
+    display: none;
+}
+.pt_clientwin{
+    height: 95%;
+    overflow-y: scroll;
+}
+
+.pt_clientwin label{
+    margin-right: 2em;
+}
+
 #openpage_rt{
     z-index: 100;
     position: fixed;
@@ -43,14 +61,17 @@
     width: 39%;
     height: 88%;
 
-    overflow-y: scroll;
-    background-color: #f1f1f1;
-    box-shadow:0px 0px 0.5em #999;
-    border: 1px solid #eee;
-    padding: 0.5em;
+
     display: none;
 }
 
+#openpage_txtout{
+    overflow-y: scroll;
+}
+
 .xxpg{
-    background-color: #009999;
+
+    float: left;
+    margin: 1px;
+    border: 1px dashed #999;
 }
