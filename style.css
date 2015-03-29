@@ -1,6 +1,12 @@
 .wordlist{
-    color: #99792a;
+    color: green;
+    display: none;
 }
+.pg_show_wl{
+    color: forestgreen;
+    cursor: pointer;
+}
+
 #pagestat_div{
     float: right;
 }

@@ -754,6 +754,12 @@ function open_page_win(){
 }
 
 
+function pg_show_wordlist(){
+    jQuery(".pg_show_wl").click(function(){
+        jQuery(this).siblings(".wordlist").toggle();
+    });
+}
+
 
 function init_ui(){
     /*
@@ -766,6 +772,7 @@ function init_ui(){
     USER_WORDLIST_NAME = JSINFO['userwords_ns']+JSINFO['user']+":wordlist";
     WORDLIST_NAME=JSINFO['wordlist_ns']+"wordlist";
 
+    pg_show_wordlist();
     jQuery(".xxpg_book").click(search_book_win);
     jQuery(".xxpg_parse").click(parse_book_win);
     jQuery(".xxpg_open").click(open_page_win);
