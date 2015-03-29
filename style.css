@@ -53,10 +53,19 @@
     cursor: pointer;
     background-color: #e9e9e9;
     border: 1px double #999;
-    font-size: 80%;
+    font-size: 75%;
     margin: 1px 0.5em;
     padding: 0.1em 0.5em;
 }
+
+.pt_window input[name="search_bt"]{
+    background-color: #ccc;
+}
+.pt_window input[name="parse_bt"]{
+    background-color: #ccc;
+}
+
+
 
 .pt_window .ptclose{
     position: absolute;
@@ -68,20 +77,27 @@
 .pt_clientwin{
     height: 95%;
     overflow-y: scroll;
+    word-wrap: break-word;
 }
 
 
 
 .pt_clientwin .back_ns{
-    border: dashed 1px #99792a;
+    background-image: url(ptback.png);
+    background-repeat: no-repeat;
+    padding-left: 25px;
 }
 .pt_clientwin .show_booklist{
     cursor: pointer;
 }
-
-.pt_clientwin .bl_fold{
-    border: dashed 1px #003399;
+.pt_clientwin .match_show_dl{
+    color: cadetblue;
+    cursor: pointer;
 }
+.pt_clientwin .mt_more_words{
+    display: none;
+}
+
 .pt_clientwin .sp_fold{
     background-image: url(fold.png);
     padding: 0 10px;
@@ -90,6 +106,8 @@
 
 .pt_clientwin ul{
     list-style: none;
+    margin: 0px;
+    padding: 0px;
 }
 
 .pt_clientwin li{

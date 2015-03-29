@@ -592,7 +592,7 @@ function parse_book(event){
     ptwin.pb_pre_wordss=null;
     ptwin.parse_str="";
     ptwin.parse_logstr="";
-    if(parse_book_list.length<1){
+    if(parse_book_list.length<2){
         return;
     }else{
         var buttonid= jQuery(this).attr("id");
@@ -632,8 +632,8 @@ function parse_book_win(){
 
         var parse_bt = jQuery('<input name="parse_bt" id="parse_{0}" class="button" type="button" value="Parse">'.format(winid));
         parse_bt.click({"ptwin":ptwin},parse_book);
-        ptwin.addfilter();
-        ptwin.adduser_filter();
+//        ptwin.addfilter();
+//        ptwin.adduser_filter();
         ptwin.getclientwin().append(logic_sel);
         ptwin.getclientwin().append(parse_bt);
     }
@@ -657,10 +657,13 @@ function search_book_aj(mdata){
         if(tmphh[1]!=null) {
             match_rate_str += "." + tmphh[1].substring(0, 2);
         }
-        mystr+='<div class="match_rt" rate="{0}"><a href="{1}" target="_blank">{2}</a><span> , match rate:{0} ({3}/{4})</span><br/>\
-        <span>unmatch list:[ {5} ]</span><br/><span>match list : [ {6}]</span> </div>'.format(match_rate_str,DOKU_BASE+bookname,bookname,match_list.length,wordarray.length,unmatch_list.join(","),match_list.join(","));
+        mystr+='<div class="match_rt" rate="{0}"><a href="{1}" target="_blank">{2}</a><span> , match rate:{0}% ({3}/{4}),</span><span class="match_show_dl">more detail...</span><br/>\
+        <span class="mt_more_words">Unmatch list:[ {5} ]</span><br/><span class="mt_more_words">Match list : [ {6}]</span> </div>'.format(match_rate_str,DOKU_BASE+bookname,bookname,match_list.length,wordarray.length,unmatch_list.join(","),match_list.join(","));
     }
     ptwin.output.html(mystr);
+    ptwin.output.find(".match_show_dl").click(function(){
+        jQuery(this).siblings(".mt_more_words").toggle();
+    });
 }
 
 function search_book(event){
@@ -701,7 +704,7 @@ function search_book_win(){
 
         var search_bt = jQuery('<input name="search_bt" id="search_{0}" class="button" type="button" value="Search">'.format(winid));
         search_bt.click({"ptwin":ptwin},search_book);
-        ptwin.addfilter();
+//        ptwin.addfilter();
         ptwin.adduser_filter();
         ptwin.getclientwin().append(search_bt);
     }
@@ -760,6 +763,9 @@ function init_ui(){
         */
 
 //    alert(jQuery("html").hasClass("phone"));
+    USER_WORDLIST_NAME = JSINFO['userwords_ns']+JSINFO['user']+":wordlist";
+    WORDLIST_NAME=JSINFO['wordlist_ns']+"wordlist";
+
     jQuery(".xxpg_book").click(search_book_win);
     jQuery(".xxpg_parse").click(parse_book_win);
     jQuery(".xxpg_open").click(open_page_win);
