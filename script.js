@@ -178,7 +178,7 @@ function sort_wordlist(){
     }
 
     var rt_txt = out_list.join(",");
-    alert("input words="+word_list.length+",out words="+out_list.length+"repeat words="+re_list.join(", "));
+//    alert("input words="+word_list.length+",out words="+out_list.length+"repeat words="+re_list.join(", "));
     jQuery("#wiki__text").val(rt_txt);
 }
 //----------------------
@@ -337,6 +337,17 @@ PTwindow.prototype.show=function(){
         this.jqwin.css("left",this.ptleft);
     }
     this.jqwin.slideDown(500);
+};
+
+
+function Listwindow(ptsubclass,pttop,ptleft,ptwidth,ptheight){
+    PTwindow.call(this,ptsubclass,pttop,ptleft,ptwidth,ptheight);
+}
+Listwindow.prototype=new PTwindow();
+
+Listwindow.prototype.createwin=function(winid){
+    PTwindow.prototype.createwin.call(this,winid);
+
 };
 
 
@@ -538,12 +549,122 @@ function parse_book_win(){
 
 }
 
-function search_book_worker(){
+function add_book_win(ptwin){
+    var booklist=jQuery( '<div class="booklist"> </div>');
 
+    var bookdir = jQuery('<input type="text" name="bookdir">');
+    var btckall = jQuery('<input name="ckall" class="button" type="button" value="ClickAll">');
+    var btunckall = jQuery('<input name="unckall" class="button" type="button" value="UnClickAll">');
+
+    btckall.click(function(){
+        jQuery(this).parent().find('input[type="checkbox"]').prop("checked",true);
+    });
+    btunckall.click(function(){
+        jQuery(this).parent().find('input[type="checkbox"]').prop("checked",false);
+    });
+    var user_filter_sel = jQuery('<select name="user_filter_sel"><option value="user_wordlist">uwords</option></select>');
+
+    ptwin.getclientwin().append(booklist);
+    ptwin.getclientwin().append(bookdir);
+    ptwin.getclientwin().append(btckall);
+    ptwin.getclientwin().append(btunckall);
+    ptwin.getclientwin().append(user_filter_sel);
+
+}
+
+function show_booklist(arg_ns){
+    var nowns=jQuery(this).attr("ns");
+    if(nowns==null){
+        nowns=arg_ns;
+    }
+    var nslist= nowns.substr(0,nowns.length-1).split(":");
+    var ptid = jQuery(this).attr("ptid");
+    var ptwin =ptw_list[ptid];
+    var book_list = ptwin.book_list;
+    var cur_ns = nslist[0]+":";
+    for(var i=1;i<nslist.length;i++){
+        cur_ns+=nslist[i]+":";
+        book_list=book_list["ns"][cur_ns];
+    }
+    var outwin = ptwin.getclientwin().children(".booklist");
+    var mystr="";
+    var ptwinid = ptid;
+    var ckname="ck_"+ptwinid;
+    var backns="";
+    for(var b=0;b<nslist.length-1;b++){
+        backns+=nslist[i]+":";
+    }
+    mystr+='<span class="sp_ns" ns="{0}" ptid="{1}">Back</span>'.format(backns,ptwinid);
+
+    if(book_list['ns']){
+        for(var ns in book_list['ns']){
+            var ckid="ck_"+ns.replace(/:/g,"_");
+            mystr+='<span class="sp_ns" ns="{2}" ptid="{0}">ns</span><input type="checkbox" name="{1}" value="{2}" id="{3}" />\
+            <label  class="lb_ns" for="{3}">{4}</label>'.format(ptwinid,ckname,ns,ckid,ns);
+        }
+    }
+    if(book_list['files']){
+        for(var i=0;i<book_list['files'].length;i++){
+            var filename = book_list['files'][i];
+            var ckid="ck_"+filename.replace(/:/g,"_");
+            mystr+='<input type="checkbox" name="{0}" value="{1}" id="{2}" /><label for="{2}">{3}</label>'.format(ckname,filename,ckid,filename);
+        }
+    }
+    outwin.html(mystr);
+    outwin.children(".sp_ns").click(show_booklist);
+}
+
+function search_book_worker(mdata){
+
+    var book_txt =mdata.content;
+    var book_list =JSON.parse(book_txt);
+    var ptwin =ptw_list[mdata.reflect];
+
+    ptwin.book_list = book_list;
+    var outwin = ptwin.getclientwin().children(".booklist");
+    var mystr="";
+    var ptwinid = mdata.reflect;
+    var ckname="ck_"+ptwinid;
+    if(book_list['ns']){
+        for(var ns in book_list['ns']){
+            var ckid="ck_"+ns.replace(/:/g,"_");
+            mystr+='<span class="sp_ns" ns="{2}" ptid="{0}">ns</span><input type="checkbox" name="{1}" value="{2}" id="{3}" />\
+            <label  class="lb_ns" for="{3}">{4}</label>'.format(ptwinid,ckname,ns,ckid,ns);
+        }
+    }
+    if(book_list['files']){
+        for(var i=0;i<book_list['files'].length;i++){
+            var filename = book_list['files'][i];
+            var ckid="ck_"+filename.replace(/:/g,"_");
+            mystr+='<input type="checkbox" name="{0}" value="{1}" id="{2}" /><label for="{2}">{3}</label>'.format(ckname,filename,ckid,filename);
+        }
+    }
+    outwin.html(mystr);
+    outwin.children(".sp_ns").click(show_booklist);
 }
 
 function search_book_win(){
 
+    var buttonid= jQuery(this).attr("id");
+    if(ptw_list[buttonid]==null){
+        var top = jQuery(this).attr("arg1");
+        var left = jQuery(this).attr("arg2");
+        var width = jQuery(this).attr("arg3");
+        var height = jQuery(this).attr("arg4");
+
+        var swin =new PTwindow("ptbook",top,left,width,height);
+        ptw_list[buttonid]=swin;
+        swin.createwin(buttonid);
+        add_book_win(swin);
+    }
+    var ptwin = ptw_list[buttonid];
+    var mdata=new Object();
+    mdata['call']="ajaxpeon";
+    var url = DOKU_BASE + 'lib/exe/ajax.php';
+    mdata['target']="booklist";
+    mdata['reflect']=buttonid;
+    jQuery.ajax({url:url,data:mdata,success:search_book_worker,dataType:"jsonp",crossDomain:true});
+    ptwin.show();
 }
 
 function init_ui(){
@@ -554,6 +675,7 @@ function init_ui(){
         */
 
 //    alert(jQuery("html").hasClass("phone"));
+    jQuery(".xxpg_book").click(search_book_win);
     jQuery(".xxpg_parse").click(parse_book_win);
     jQuery(".xxpg_open").click(open_page_win);
 }

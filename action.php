@@ -16,6 +16,8 @@ class  action_plugin_pagestat extends DokuWiki_Action_Plugin
 
     function set_data(){
         global $JSINFO;
+//        global $conf;
+//        $myste = $conf["metadir"];
         $JSINFO['user'] = $_SERVER['REMOTE_USER'];
         $JSINFO['wordlist_ns']=$this->getConf('wordlist_ns');
         $JSINFO['userwords_ns']=$this->getConf('userwords_ns');

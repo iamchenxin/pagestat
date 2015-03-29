@@ -44,13 +44,58 @@
     padding: 0.5em;
     display: none;
 }
+
+.pt_window select{
+    border: 1px double #999;
+}
+
+.pt_window input[type="button"]{
+    cursor: pointer;
+    background-color: #e9e9e9;
+    border: 1px double #999;
+    font-size: 80%;
+    margin: 1px 0.5em;
+    padding: 0.1em 0.5em;
+}
+
+.pt_window .ptclose{
+    position: absolute;
+    bottom: 1px;
+    right: 1em;
+
+}
+
 .pt_clientwin{
     height: 95%;
     overflow-y: scroll;
 }
 
-.pt_clientwin label{
-    margin-right: 2em;
+
+
+.pt_clientwin .back_ns{
+    border: dashed 1px #99792a;
+}
+.pt_clientwin .show_booklist{
+    cursor: pointer;
+}
+
+.pt_clientwin .bl_fold{
+    border: dashed 1px #003399;
+}
+.pt_clientwin .sp_fold{
+    background-image: url(fold.png);
+    padding: 0 10px;
+    background-repeat: no-repeat;
+}
+
+.pt_clientwin ul{
+    list-style: none;
+}
+
+.pt_clientwin li{
+    display: block;
+    float: left;
+    margin-right: 1em;
 }
 
 #openpage_rt{
