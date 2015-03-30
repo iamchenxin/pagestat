@@ -106,7 +106,7 @@
 
 .pt_clientwin .sp_fold{
     background-image: url(fold.png);
-    padding: 0 15px;
+    padding: 0 0 0 22px;
     background-repeat: no-repeat;
 }
 
@@ -143,4 +143,24 @@
     float: left;
     margin: 1px;
     border: 1px dashed #999;
+}
+.pt_edit_static{
+    width: 98%;
+    height: 40%;
+}
+.pt_edit_area{
+    width: 98%;
+    height: 53%;
+    border: solid 1px #999;
+}
+
+.wl_unm{
+    color: green;
+}
+.wl_match{
+    color: #999999;
+}
+
+.wordlist input{
+    font-size: 75%;
 }

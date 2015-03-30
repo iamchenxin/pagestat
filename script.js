@@ -59,16 +59,8 @@ function words_analyze(data){
 //    alert("words_analyze");
     jQuery("#pagestat_txtout").html("begin to analyze words~~~");
     var wordlisttxt = data.content;
-    /*
-    var cc=0;
-    for(;cc<wordlisttxt.length;cc++){
-        if(wordlisttxt[cc]=='['){
-            break;
-        }
-    }
-    */
-    var wd_filter = wordlisttxt.split(",");
 
+    var wd_filter = wordlisttxt.split(",");
 
     jQuery("#pagestat_txtout").html(outstr);
 
@@ -115,20 +107,12 @@ function words_analyze(data){
     }
 
     outstr+= "Un match words = " +words_out_list.length+",Your filter conut="+wd_filter.length+"<br/>" ;
-//    rtstr += JSON.stringify(words_out_list,null,"\t")+"<br/>";
     var rtstr=words_out_list.join(",    ");
     jQuery("#pagestat_edit").val(rtstr);
     jQuery("#pagestat_edit").slideDown(500);
 
     jQuery("#pagestat_txtout").html(outstr);
-    /*
-    outstr+="<br/>";
-    var xx;
-    for(xx in JSINFO){
-        outstr+=",key = "+xx;
-        outstr+=",value= "+JSINFO[xx];
-    }
-    */
+
 }
 
 function insert_words_todk(){
@@ -155,30 +139,10 @@ function sort_wordlist(){
     }
     word_list.sort();
 
-    var i=1;
-    var count=1;
-    var tx_countset={};
-    var re_list=[];
-    // order and count every word
-    for(;i<word_list.length;i++){
-        if (word_list[i] != word_list[i - 1]) {
-            if(count>1){
-                re_list[re_list.length]=word_list[i-1];
-            }
-            tx_countset[word_list[i - 1]] = count;
-            count = 1;
-        } else {
-            count += 1;
-
-        }
-    }
-    var out_list=[];
-    for (var xx in tx_countset){
-        out_list[out_list.length]=xx;
-    }
+    var out_list = make_unique_list(word_list);
 
     var rt_txt = out_list.join(",");
-//    alert("input words="+word_list.length+",out words="+out_list.length+"repeat words="+re_list.join(", "));
+
     jQuery("#wiki__text").val(rt_txt);
 }
 //----------------------
@@ -187,10 +151,10 @@ function sort_wordlist(){
 
 
 //Complement (set theory) ,conjuction
-function wComplement_w(main_sortlist,sortlisttwo){
+function wComplement_w(main_sortlist,filter_words){
 
     var main_map=make_map_w(main_sortlist);
-    var filt_sortlist=make_unique_list(sortlisttwo);
+    var filt_sortlist=make_unique_list(filter_words);
 
     var i=0;
     for(;i<filt_sortlist.length;i++){
@@ -238,12 +202,15 @@ function make_unique_list(ordered_list){
     for(;i<ordered_list.length;i++){
         if(regx.test(ordered_list[i])!=true) {  //ignore number and symbol
             if (ordered_list[i] != ordered_list[i - 1]) {
-                unique_list[unique_list.length]= ordered_list[i - 1] ;
+                unique_list.push( ordered_list[i - 1] );
                 count = 1;
             } else {
                 count += 1;
             }
         }
+    }
+    if(ordered_list[ordered_list.length - 1] != ordered_list[ordered_list.length - 2]){  // push the last def word
+        unique_list.push(ordered_list[ordered_list.length - 1]);
     }
     return unique_list;
 }
@@ -263,6 +230,9 @@ function make_map_w(ordered_list){
                 count += 1;
             }
         }
+    }
+    if(ordered_list[ordered_list.length - 1] != ordered_list[ordered_list.length - 2]){  // the last def word
+        tx_countset[ordered_list[ordered_list.length - 1]]=1;
     }
     return tx_countset;
 }
@@ -540,6 +510,25 @@ Listwindow.prototype.getselect_book = function(){
 };
 
 
+// ---------------------Editwindow----------------
+function Editwindow(ptsubclass,pttop,ptleft,ptwidth,ptheight){
+    PTwindow.call(this,ptsubclass,pttop,ptleft,ptwidth,ptheight);
+}
+Editwindow.prototype=new PTwindow();
+
+Editwindow.prototype.createwin=function(winid) {
+    PTwindow.prototype.createwin.call(this, winid);
+    var workdiv =jQuery('<div class="pt_edit_static"></div><textarea class="pt_edit_area" name="pt_edit" class="edit"></textarea> <div style="clear: both"></div>');
+    this.getclientwin().append(workdiv);
+};
+Editwindow.prototype.get_edit_static=function(){
+    return this.getclientwin().children(".pt_edit_static");
+};
+
+Editwindow.prototype.get_edit_area=function(){
+    return this.getclientwin().children(".pt_edit_area");
+};
+// <<<<<<<<<<<--------Editwindow-----------------------------
 
 
 
@@ -754,10 +743,136 @@ function open_page_win(){
 }
 
 
+
+
+// ------------------edit wordlist -----------
+
+function addto_w_rt(mdata){
+    var ptwin =ptw_list[mdata.reflect];
+    var rttxt = mdata.content;
+    ptwin.get_edit_static().html(rttxt);
+}
+
+
+function addto_wordlist(event){
+    var ptwin = event.data.ptwin;
+    var send_txt = ptwin.get_edit_area().val();
+
+    var mdata=new Object();
+    mdata['call']="ajaxpeon";
+    var url = DOKU_BASE + 'lib/exe/ajax.php';
+    mdata['target']="writeraw";
+    mdata['sub']="wordlist";
+    mdata['txt']=send_txt;
+    mdata['pageid']=JSINFO['userwords_ns']+JSINFO['user']+":"+ptwin.dst_page;
+    mdata['reflect']=ptwin.getwinid();
+    jQuery.ajax({url:url,data:mdata,success:addto_w_rt,dataType:"jsonp",crossDomain:true});
+}
+
+
+function addnewwords_win(){
+    var winid = jQuery(this).attr("id");
+    if(ptw_list[winid]==null){
+        var top = jQuery(this).attr("arg2");
+        var left = jQuery(this).attr("arg3");
+        var width = jQuery(this).attr("arg4");
+        var height = jQuery(this).attr("arg5");
+        var ptwin =new Editwindow("addwords",top,left,width,height);
+        ptwin.createwin(winid);
+        ptwin.dst_page = jQuery(this).attr("arg1");
+        ptw_list[winid]=ptwin;
+
+        var addw_bt = jQuery('<input name="add_wd" id="add_wd_{0}" class="button" type="button" value="Add">'.format(winid));
+        addw_bt.click({"ptwin":ptwin},addto_wordlist);
+        ptwin.getclientwin().append(addw_bt);
+    }
+    ptw_list[winid].show();
+}
+//  <<<<----------------edit wordlist------------------
+
+//----------------pg_convert_wordls------
+var wls_ori_words_list =null;
+var wls_filter_set=null;
+
+function addto_txt_rt(mdata){
+//    alert(mdata.content);
+    filt_page_wordls();
+}
+
+function addto_wordlist_txt(words_txt){
+    var mdata=new Object();
+    mdata['call']="ajaxpeon";
+    var url = DOKU_BASE + 'lib/exe/ajax.php';
+    mdata['target']="writeraw";
+    mdata['sub']="wordlist";
+    mdata['txt']=words_txt;
+    mdata['pageid']=USER_WORDLIST_NAME;
+    jQuery.ajax({url:url,data:mdata,success:addto_txt_rt,dataType:"jsonp",crossDomain:true});
+}
+
+function add_newwords(event){
+    var wlsdiv = event.data.wlsdiv;
+    var add_list=new Array();
+    wlsdiv.find('input.wl_unm').each(function(i,v){
+        if( jQuery(this).prop("checked")==true ){
+            add_list.push(jQuery(this).val());
+        }
+    });
+//    alert(add_list.join(","));
+    addto_wordlist_txt(add_list.join(","));
+}
+
+function pg_convert_wordls(mdata){
+    var wordls_txt =mdata.content;
+    if(wordls_txt.length<10){
+        return;
+    }
+    var wlsdiv = jQuery(".wordlist");
+    if(wlsdiv.length<1){
+        alert("no wordlist");
+        return;
+    }
+    var wlist="";
+    if(wls_ori_words_list==null){
+        var wlist =wlsdiv.text().split(",");
+        wls_ori_words_list = wlist;
+    }else{
+        wlist = wls_ori_words_list;
+    }
+    var filter_list =wordls_txt.split(",");
+    var filter_set=make_map_w(filter_list);
+
+    var outstr = "";
+
+    for(var i=0;i<wlist.length;i++){
+        if(filter_set[wlist[i]]==null) {
+            outstr += '<input class="wl_unm" id="{0}" type="checkbox" name="{1}" value="{2}" /><label class="wl_unm" for="{0}">{2},</label>'.format('wl' + wlist[i], 'wlck', wlist[i]);
+        }else{
+            outstr+='<span class="wl_match">{0},</span>'.format(wlist[i]);
+        }
+    }
+    outstr+='<input name="wl_addwords" class="button" type="button" value="Add to word list">';
+    wlsdiv.html(outstr);
+    wlsdiv.children("input[name='wl_addwords']").click({"wlsdiv":wlsdiv},add_newwords);
+
+}
+
+function filt_page_wordls(){
+
+    var mdata=new Object();
+    mdata['pageid']=USER_WORDLIST_NAME;
+    mdata['call']="ajaxpeon";
+    var url = DOKU_BASE + 'lib/exe/ajax.php';
+    mdata['target']="rawpage";
+    jQuery.ajax({url:url,data:mdata,success:pg_convert_wordls,dataType:"jsonp",crossDomain:true});
+}
+// <<<<<-----pg_convert_wordls------------
+
 function pg_show_wordlist(){
     jQuery(".pg_show_wl").click(function(){
-        jQuery(this).siblings(".wordlist").toggle();
+        jQuery(".wordlist").toggle();
     });
+    jQuery("#pg_filt_wl").click(filt_page_wordls);
 }
 
 
@@ -772,10 +887,12 @@ function init_ui(){
     USER_WORDLIST_NAME = JSINFO['userwords_ns']+JSINFO['user']+":wordlist";
     WORDLIST_NAME=JSINFO['wordlist_ns']+"wordlist";
 
+
     pg_show_wordlist();
     jQuery(".xxpg_book").click(search_book_win);
     jQuery(".xxpg_parse").click(parse_book_win);
     jQuery(".xxpg_open").click(open_page_win);
+    jQuery(".xxpg_words").click(addnewwords_win);
 }
 
 jQuery(xxeditpsbt_add);

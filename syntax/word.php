@@ -49,14 +49,14 @@ class syntax_plugin_pagestat_word extends DokuWiki_Syntax_Plugin {
             list($state,$match) = $data;
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $renderer->doc .= '<span class="pg_show_wl">Wordlist:</span><span class="wordlist" id="wordlist_'.$match.'">';
+                    $renderer->doc .= '<span class="pg_show_wl">Wordlist:</span><div class="wordlist" id="wordlist_'.$match.'">';
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= $renderer->_xmlEntities($match);
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= "</span>";
+                    $renderer->doc .= "<input class='button' type='button' value='Filt Words'id='pg_filt_wl'></div>";
                     break;
             }
             return true;
