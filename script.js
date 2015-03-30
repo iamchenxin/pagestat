@@ -43,7 +43,7 @@ function xxeditpsbt_add(){
 function ajax_get_words(){
 //    alert("ajax_get_words");
     var mdata={};
-    mdata['pageid']="user:admin:wordlist";
+    mdata['pageid']=WORDLIST_NAME;
     mdata['call']="ajaxpeon";
     mdata['target']="rawpage";
     var url = DOKU_BASE + 'lib/exe/ajax.php';
@@ -57,6 +57,8 @@ var words_out_list=[];
 
 function words_analyze(data){
 //    alert("words_analyze");
+
+
     jQuery("#pagestat_txtout").html("begin to analyze words~~~");
     var wordlisttxt = data.content;
 
@@ -66,45 +68,23 @@ function words_analyze(data){
 
     var texttmp = jQuery("#wiki__text").val();
     var text = texttmp.toLocaleLowerCase();
-    var txlist= text.split(/[^\w\-_]+/);
+    var txlist= text.split(/[^\w]+/);
     var outstr = "This page has " +txlist.length +" words.";
     txlist.sort();
 
-
-    var i=1;
-    var count=1;
-    var tx_countset={};
-    var unique_words=0;
-    var regx =new RegExp("[^a-z]");
-    // order and count every word
-    for(;i<txlist.length;i++){
-        if(regx.test(txlist[i])!=true) {  //ignore number and symbol
-            if (txlist[i] != txlist[i - 1]) {
-                tx_countset[txlist[i - 1]] = count;
-                unique_words+=1;
-                count = 1;
-            } else {
-                count += 1;
-            }
-        }
+    var wordls_set =  make_map_w(txlist);
+    var word_sort_list=new Array();
+    for(var kk in wordls_set){
+        word_sort_list.push(kk);
     }
-    outstr+="and "+unique_words+" unique words.The words statistics:<br/>";
-   outstr += JSON.stringify(tx_countset,null,"\t")+"<br/><br/><br/>";
+    word_sort_list.sort();
+
+
+    outstr+="and "+word_sort_list.length+" unique words.The words statistics:<br/>";
+   outstr += JSON.stringify(wordls_set,null,"\t")+"<br/><br/><br/>";
     jQuery("#pagestat_txtout").html(outstr);
-    var k=0;
-    i=0;
-    var samelist={};
-    for(;k<wd_filter.length;k++){
-        if(tx_countset[wd_filter[k]] != null ){
-            samelist[wd_filter[k]]=tx_countset[wd_filter[k]];
-            delete tx_countset[wd_filter[k]];
-        }
-    }
 
-    var words_out_list=[];
-    for (x in tx_countset){
-        words_out_list[words_out_list.length]=x;
-    }
+    var words_out_list = wComplement_w(word_sort_list,wd_filter);
 
     outstr+= "Un match words = " +words_out_list.length+",Your filter conut="+wd_filter.length+"<br/>" ;
     var rtstr=words_out_list.join(",    ");
@@ -119,11 +99,12 @@ function insert_words_todk(){
 
     var anal_txt= jQuery("#pagestat_edit").val();
     var anal_list=anal_txt.split(",");
-    anal_list.sort();
     var outstr="<WORDLIST>";
     for (var x in anal_list){
-        outstr+=anal_list[x].trim()+",";
+        anal_list[x]=anal_list[x].trim();
     }
+    anal_list.sort();
+    outstr+=anal_list.join(",");
     outstr+="</WORDLIST>"+anal_list.length+"\n\n";
     var edit_txt = jQuery("#wiki__text").val();
     jQuery("#wiki__text").val(outstr+edit_txt);
@@ -157,15 +138,17 @@ function wComplement_w(main_sortlist,filter_words){
     var filt_sortlist=make_unique_list(filter_words);
 
     var i=0;
+
     for(;i<filt_sortlist.length;i++){
         if(main_map[filt_sortlist[i]]!=null){ // exist both
             delete main_map[filt_sortlist[i]]; //subtract the both in main_map
+
         }
     }
 
-    var words_out_list=[];
-    for (x in main_map){
-        words_out_list[words_out_list.length]=x;
+    var words_out_list=new Array();
+    for (var x in main_map){
+        words_out_list.push(x);
     }
 
     return words_out_list; //the remaining is complement
@@ -197,10 +180,10 @@ function make_unique_list(ordered_list){
     var i=1;
     var count=1;
     var unique_list=[];
-    var regx =new RegExp("[^a-zA-Z]");
+    var regx =new RegExp(/[^a-zA-Z]/);
     //  count every word
     for(;i<ordered_list.length;i++){
-        if(regx.test(ordered_list[i])!=true) {  //ignore number and symbol
+        if(regx.test(ordered_list[i-1])!=true) {  //ignore number and symbol
             if (ordered_list[i] != ordered_list[i - 1]) {
                 unique_list.push( ordered_list[i - 1] );
                 count = 1;
@@ -222,7 +205,7 @@ function make_map_w(ordered_list){
     var regx =new RegExp("[^a-zA-Z]");
     // count every word
     for(;i<ordered_list.length;i++){
-        if(regx.test(ordered_list[i])!=true) {  //ignore number and symbol
+        if(regx.test(ordered_list[i-1])!=true) {  //ignore number and symbol
             if (ordered_list[i] != ordered_list[i - 1]) {
                 tx_countset[ordered_list[i - 1]] = count;
                 count = 1;
