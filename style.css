@@ -74,10 +74,7 @@
 
 
 .pt_window .ptclose{
-    position: absolute;
-    bottom: 1px;
-    right: 1em;
-
+    float: right;
 }
 
 .pt_clientwin{
