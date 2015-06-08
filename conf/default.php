@@ -4,5 +4,5 @@
  * Time: 5:47
  */
 
-$conf['wordlist_ns']      = "user:admin:";
-$conf['userwords_ns']    =  'user:@USER@:';
+$conf['g_wordlists']      = "wordlist";
+$conf['user_wordlists']    =  'wordlist';

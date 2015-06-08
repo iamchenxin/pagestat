@@ -73,7 +73,7 @@
 
 
 
-.pt_window .ptclose{
+.pt_window .pt_button_r{
     float: right;
 }
 
@@ -142,13 +142,20 @@
     border: 1px dashed #999;
 }
 .pt_edit_static{
-    width: 98%;
-    height: 40%;
+    overflow-y: scroll;
 }
 .pt_edit_area{
-    width: 98%;
-    height: 53%;
+
     border: solid 1px #999;
+}
+
+.pt_mul_edit{
+    margin-top: 20px;
+    width: 98%;
+}
+
+.pt_heightlight{
+    border: 2px solid deepskyblue !important;
 }
 
 .wl_unm{
