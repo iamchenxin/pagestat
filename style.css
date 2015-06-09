@@ -158,6 +158,11 @@
     border: 2px solid deepskyblue !important;
 }
 
+.xxbk_slice_words{
+    color: #009900;
+    cursor: pointer;
+}
+
 .wl_unm{
     color: green;
 }

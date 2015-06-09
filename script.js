@@ -939,7 +939,7 @@ Listwindow.prototype.addfilter=function(){
     jQuery.ajax({url:url,data:mdata,success:addfilter_aj,dataType:"jsonp",crossDomain:true});
 };
 
-var USER_WORDLIST_NAME = "user:iamchenxin:wordlist";
+var USER_WORDLIST_NAME ;
 
 function add_userfilter_aj(mdata){
     var ptwin =ptw_list[mdata.reflect];
@@ -1368,6 +1368,70 @@ console.log("iam two edit");
     ptw_list[buttonid].show();
 }
 
+// <<<<<<<<<<<<---------------syntax- block------------------------
+// <<<<<<<<<<<<---------------syntax- block------------------------
+// <<<<<<<<<<<<---------------syntax- block------------------------
+// <<<<<<<<<<<<---------------syntax- block------------------------
+function xxbk_slice(element){
+    var s_word_arr = extract_allwords( jQuery(element).attr("arg1"));
+    if(s_word_arr.length>1){
+        var s_from=s_word_arr[0];
+        var s_to = s_word_arr[1];
+        var add_txt = '<span class="xxbk_slice_words" s_from="{0}" s_to="{1}" onclick="xxbk_slice_click(this)">{0} -> {1} </span>\
+        <span class="xxbk_slice_inf">{2}</span>\
+        <div class="xxbk_slice_result" style="display: none" init="n" ></div>\
+             '.format(s_from,s_to,jQuery(element).html());
+        jQuery(element).html(add_txt);
+    }
+}
+function xxbk_slice_click(element){
+
+    var jq_wordlist=jQuery(".wordlist");
+    var rt_div=jQuery(element).siblings(".xxbk_slice_result");
+    if(rt_div.length==0){
+        jQuery(element).html("the slice was broken!please check the page!");
+        return
+    }
+    if(rt_div.attr("init")=='n'){
+        if(jq_wordlist.length>0) {
+            var wd_txt = jq_wordlist.text();
+
+            var s_from = jQuery(element).attr("s_from");
+            var s_to = jQuery(element).attr("s_to");
+            var tmp="\\b{0}\\b.+\\b{1}\\b".format(s_from, s_to);
+//            var tmp="\b"+s_from+"\b.+\b"+s_to+"\b";
+
+            var reg_sr = new RegExp(tmp);
+            var rt = wd_txt.match(reg_sr);
+            if (rt) {
+                rt_div.html(rt[0]);
+            }else{
+                rt_div.html("!!! Maybe The slice words was deleted from the wordlist,please choose another word to slice");
+            }
+        }
+        rt_div.attr("init",'y');
+    }
+    rt_div.toggle();
+}
+
+function syntax_BK_init() {
+    jQuery(".xxbk").each(function (index, element) {
+    //element == this
+        var class_txt = jQuery(this).attr("class");
+        var ctype = class_txt.match(/\bxxbk_[\w]+\b/);
+        console.log(class_txt);
+        console.log(ctype);
+        if(ctype){
+            switch (ctype[0]){
+                case "xxbk_slice":
+                    xxbk_slice(element);
+                    break;
+            }
+        }
+    });
+}
+
+
 
 function init_ui(){
     /*
@@ -1377,10 +1441,10 @@ function init_ui(){
         */
 
 //    alert(jQuery("html").hasClass("phone"));
-    USER_WORDLIST_NAME = JSINFO['userwords_ns']+JSINFO['user']+":wordlist";
+    USER_WORDLIST_NAME = 'user:'+JSINFO['user']+":wordlist";
     WORDLIST_NAME=JSINFO['wordlist_ns']+"wordlist";
 
-
+    syntax_BK_init();
     pg_show_wordlist();
     jQuery(".xxpg_learn").click(search_learn_win);
     jQuery(".xxpg_parse").click(parse_learn_win);
