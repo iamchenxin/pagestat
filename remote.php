@@ -93,7 +93,7 @@ class remote_plugin_pagestat extends DokuWiki_Remote_Plugin {
                 break;
         }
 
-        $sqli = new mysqli("localhost", "root", "135790", "wordlist");
+        $sqli = new mysqli("localhost", "www-data", "135790", "wordlist");
 
         $headwords=array();
 
