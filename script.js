@@ -681,11 +681,15 @@ function get_pagename(){
 
 Analyze_Win.prototype.make_newwords=function(in_jqwin,out_jqwin){
     var newwords = extract_allwords(in_jqwin.val());
-    var out_str="====== wordlist ======\n";
+    var out_str="====== Movie Inf ======\n";
+    out_str+="\nLike genre,stars,director and more,please editor me\n";
+    out_str+="====== wordlist ======\n";
     out_str+="<WORDLIST>";
     out_str+=newwords.join(",");
     out_str+="</WORDLIST>";
     out_str+="\n===== slice =====\n";
+    out_str+="\n====== Notice ======\n";
+    out_str+="\n some hard grammar or sentence in movie,please editor me\n";
     out_str+="\n====== Words Meaning ======\n";
 
     out_str+="\n====== Subtitle ======\n";
