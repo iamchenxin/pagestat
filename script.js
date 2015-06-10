@@ -82,7 +82,7 @@ function make_unique_list(ordered_list){
     return unique_list;
 }
 // this function
-function make_map_w(ordered_list){
+function make_map_w(ordered_list){  // make set ,and count the same words
     var i=1;
     var count=1;
     var tx_countset={};
@@ -102,6 +102,19 @@ function make_map_w(ordered_list){
         tx_countset[ordered_list[ordered_list.length - 1]]=1;
     }
     return tx_countset;
+}
+// -----------------math2----------------------------
+
+function make_set(w_list){
+    var w_set={};
+    for(var i=0;i<w_list.length;i++){
+        if(w_set[w_list[i]]){
+            w_set[w_list[i]]+=1;
+        }else {
+            w_set[w_list[i]] = 1;
+        }
+    }
+    return w_set;
 }
 
 //--------------UI---------------------
@@ -209,15 +222,14 @@ PTwindow.prototype.heightlight=function(class_name){
                 new_list.push(cl_list[i]);
             }
         }
-        console.log("pre class = "+this.pre_heightlight.attr("class"));
+
         this.pre_heightlight.attr("class",new_list.join(" "));
-        console.log("pre class = "+this.pre_heightlight.attr("class"));
+
     }
     this.pre_heightlight=thecl;
 
-    console.log(thecl.attr("class"));
     thecl.attr("class",thecl.attr("class")+" pt_heightlight");
-    console.log(thecl.attr("class"));
+
 };
 
 // ------------- english ---special
@@ -333,7 +345,7 @@ MulEditwindow.prototype.createwin=function(winid) {
         var width = medit.width?medit.width:"auto";
         var mfloat = medit.float?medit.float:"right";
         var display = medit.display?medit.display:"block";
-        console.log(display);
+
         switch (medit.type){
             case "static":
                 outtxt+='<div class="pt_mul_edit pt_edit_static {0}" style="height: {1};width: {2};display: {3}">\
@@ -362,8 +374,9 @@ MulEditwindow.prototype.ptlog=function(str){
     logblock.html(logblock.html()+str);
 };
 
-MulEditwindow.prototype.check_word=function(words_arr,out_jqwin){
+MulEditwindow.prototype.check_word=function(words_arr,out_jqwin,mcall_back){
     var call_ob=this;
+    var call_back=mcall_back;
     ajax_xcall("ps.check_word",[words_arr],function(data){
 
         var headwords=data.result["headwords"];
@@ -394,6 +407,9 @@ MulEditwindow.prototype.check_word=function(words_arr,out_jqwin){
         out_jqwin.val(out_str);
         var out_log="headwords = {0} ,related words = {1} ,unwords(like location,name,etc..) = {2} <br/>".format(headwords.length,rstr.length,unwords.length);
         call_ob.ptlog(out_log);
+        if(call_back){
+            call_back();
+        }
     });
 };
 
@@ -497,30 +513,24 @@ Analyze_Win.prototype.createwin=function(winid) {
 
     this.getwin().find("input.al_filtword").click(function(){
         jQuery(this).hide();
-        call_ob.getwin().find(".al_edit_words").show();
-        call_ob.getwin().find(".al_checkword").show();
-        call_ob.heightlight(".al_checkword");
-
         call_ob.analyze_word();
     });
 
 
     this.getwin().find("input.al_checkword").click(function(){
         jQuery(this).hide();
-        call_ob.getwin().find("input.al_generate").show();
-        call_ob.heightlight(".al_generate");
 
         var txt_list=split_and_trim( call_ob.getwin().find(".al_edit_words").val());
         txt_list.sort();
         var thewin = call_ob.getwin().find(".al_edit_words");
-        call_ob.check_word(txt_list,thewin);
+        call_ob.check_word(txt_list,thewin,function(){
+            call_ob.getwin().find("input.al_generate").show();
+            call_ob.heightlight(".al_generate");
+        });
 
     });
     this.getwin().find("input.al_generate").click(function(){
         jQuery(this).val("Regenerate words");
-        call_ob.getwin().find(".al_edit_more").show();
-        call_ob.getwin().find(".al_makewords").show();
-        call_ob.heightlight(".al_makewords");
 
         call_ob.generate_words();
     });
@@ -537,10 +547,10 @@ Analyze_Win.prototype.createwin=function(winid) {
 Analyze_Win.prototype.analyze_word=function(){
     var call_ob=this;
     var sel_wordlist =call_ob.get_select_wordlist();
-    console.dir(sel_wordlist);
+
     ajax_xcall("ps.get_wordlist",[sel_wordlist["global"]],function(data){
         jQuery(".al_edit_words").val("begin to analyze wos~~~");
-        console.dir(call_ob);
+
 
         var wordlisttxt = data.result;
 
@@ -575,7 +585,9 @@ Analyze_Win.prototype.analyze_word=function(){
         jQuery(".al_edit_words").val(rtstr);
 
         call_ob.ptlog(work_inf);
-
+        call_ob.getwin().find(".al_edit_words").show();
+        call_ob.getwin().find(".al_checkword").show();
+        call_ob.heightlight(".al_checkword");
         call_ob.ctwinScrollDown();
     });
 };
@@ -588,7 +600,7 @@ Analyze_Win.prototype.generate_words=function(){
 
     var txt_edit_words = call_ob.getwin().find(".al_edit_words").val();
     var txt_list = txt_edit_words.split(/\[[\w]+\]:/);
-    console.dir(txt_list);
+
     var head_tmp=txt_list[1];
     var r_tmp=txt_list[2];
     var un_tmp=txt_list[3];
@@ -596,12 +608,12 @@ Analyze_Win.prototype.generate_words=function(){
     if(txt_list.length>1){ // has headwords
         out_arr=extract_allwords(txt_list[1]);
     }
-    console.dir(out_arr);
+
     if(txt_list.length>3){ // has unwords
         out_arr=out_arr.concat(extract_allwords(txt_list[3]));
 
     }
-    console.dir(out_arr);
+
     var out_list_set={};
     for(var i=0;i<out_arr.length;i++){
         out_list_set[out_arr[i]]=out_arr[i];
@@ -620,13 +632,13 @@ Analyze_Win.prototype.generate_words=function(){
                 }
             }
         }
-        console.dir(out_list_set);
+
     }
 
 
 //    console.log(JSON.stringify(txlist_unsort));
     var txlist_unsort = call_ob.txlist_unsort;
-    console.dir(txlist_unsort.length);
+
     var unsort_out_list = [];
     for(var i=0;i<txlist_unsort.length;i++){
         if(out_list_set[txlist_unsort[i]]){
@@ -635,11 +647,25 @@ Analyze_Win.prototype.generate_words=function(){
 //            console.log("i={0},word={1}".format(i,txlist_unsort[i]));
         }
     }
-    var log_inf= "The finally new words (ordered by the order in document) = " +unsort_out_list.length+"<br/>" ;
-    call_ob.getwin().find(".al_edit_more").val(unsort_out_list.join(",    "));
+
+    var uns_set = make_set(unsort_out_list);
+    var out_list=[];
+    for(var i=0;i<unsort_out_list.length;i++){
+        if(uns_set[unsort_out_list[i]]){
+            out_list.push(unsort_out_list[i]);
+            delete uns_set[unsort_out_list[i]];
+        }
+    }
+
+
+    var log_inf= "The finally new words (ordered by the order in document) = " +out_list.length+"<br/>" ;
+    call_ob.getwin().find(".al_edit_more").val(out_list.join(",    "));
 
 
     call_ob.ptlog(log_inf);
+    call_ob.getwin().find(".al_edit_more").show();
+    call_ob.getwin().find(".al_makewords").show();
+    call_ob.heightlight(".al_makewords");
     call_ob.ctwinScrollDown();
 };
 
@@ -666,7 +692,7 @@ Analyze_Win.prototype.make_newwords=function(in_jqwin,out_jqwin){
     out_str+="<code - {0}.srt>\n".format(get_pagename());
     out_str+=out_jqwin.val();
     out_str+='\n</code>';
-    console.dir(JSINFO);
+
     out_jqwin.val(out_str);
 
     this.getwin().slideUp(500);
@@ -1353,7 +1379,7 @@ function pg_show_wordlist(){
 
 function Two_edit_win(){
 
-console.log("iam two edit");
+
     var buttonid= jQuery(this).attr("id");
     if(ptw_list[buttonid]==null){
         var top = jQuery(this).attr("arg1");
@@ -1419,8 +1445,7 @@ function syntax_BK_init() {
     //element == this
         var class_txt = jQuery(this).attr("class");
         var ctype = class_txt.match(/\bxxbk_[\w]+\b/);
-        console.log(class_txt);
-        console.log(ctype);
+
         if(ctype){
             switch (ctype[0]){
                 case "xxbk_slice":
