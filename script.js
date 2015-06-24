@@ -182,10 +182,10 @@ PTwindow.prototype.getclientwin=function(){return this.jqwin.children(".pt_clien
 PTwindow.prototype.show=function(speed){
     if(speed!=true){speed=500;}
     if(jQuery("html").hasClass("phone")){
-        this.jqwin.css("width","90%");
+        this.jqwin.css("width","100%");
         this.jqwin.css("height",this.ptheight);
         this.jqwin.css("top",this.pttop);
-        this.jqwin.css("left","2%");
+        this.jqwin.css("left","0%");
     }else{
         this.jqwin.css("width",this.ptwidth);
         this.jqwin.css("height",this.ptheight);
@@ -302,6 +302,89 @@ PTwindow_E.prototype.ajax_get_select_wlist= function (xcallback){
 
 };
 
+PTwindow_E.prototype.ajax_get_defs_raw=function(words_arr,status,xcallback){
+    if(!status){status="MORE";}
+    ajax_xcall("ps.get_defs",[words_arr,status],function(data) {
+
+           var defs=data.result;
+           xcallback(defs);
+
+
+    });
+};
+
+function PTE_Olist_sbl(indent){
+    var out_txt="";
+    for(var i=0;i<indent;i++){
+        out_txt+="  ";
+    }
+    out_txt+="- ";
+    return out_txt;
+}
+function PTE_Ulist_sbl(indent){
+    var out_txt="";
+    for(var i=0;i<indent;i++){
+        out_txt+="  ";
+    }
+    out_txt+="* ";
+    return out_txt;
+}
+function PTE_make_voice(word){
+    return "<wrap vo>{0}</wrap>".format(word);
+}
+
+PTwindow_E.prototype.generate_def_more=function(word_def) {
+    console.dir(word_def);
+    var indent = 1;
+    var out_txt = "";
+
+    var word = word_def[0];
+    var pron = word_def[1];
+    var defsimp = word_def[2];
+    var defen_txt = word_def[3];
+    out_txt += "{0}{1} ({2}) \\\\ **{3}**\n".format(PTE_Olist_sbl(indent), PTE_make_voice(word), pron,defsimp);
+    indent++;
+//    out_txt += "{0}{1}\n".format(PTE_Ulist_sbl(indent), defsimp);
+    if (defen_txt) {
+        var defen=JSON.parse(defen_txt);
+        for (var key in defen) {
+            out_txt += "{0}{1}\n".format(PTE_Ulist_sbl(indent), key);
+            var subdefs = defen[key];
+            indent++;
+            for (var i = 0; i < subdefs.length; i++) {
+                var sdef = subdefs[i];
+                out_txt += "{0}''{1}''\\\\ {2}\n".format(PTE_Olist_sbl(indent), sdef.mean, sdef.sen);
+            }
+            indent--;
+        }
+    }
+    indent--;
+    return out_txt;
+};
+
+PTwindow_E.prototype.ajax_get_defs=function(words_arr,status,xcallback){
+    if(!status){status="MORE";}
+    var call_ob=this;
+    this.ajax_get_defs_raw(words_arr,status,function(defs){
+
+
+           var defs_map={};
+           for(var i=0;i<defs.length;i++){
+               defs_map[defs[i][0]]=defs[i];
+           }
+
+           var out_txt="";
+
+           for(var i=0;i<words_arr.length;i++){
+               var word_def=defs_map[words_arr[i]];
+               if(word_def) {
+                   out_txt += call_ob.generate_def_more(word_def);
+               }
+           }
+           xcallback(out_txt);
+
+    });
+};
 
 
 
@@ -622,7 +705,8 @@ Analyze_Win.prototype.generate_words=function(){
 
     if(txt_list.length>2){ // has related words
         var r_arr=txt_list[2].match(/[^,\(]+\([^\)]*\)|[\w]+/g);
-        for(var i=0;i<r_arr.length;i++){
+        var r_length = r_arr?r_arr.length:0;
+        for(var i=0;i<r_length;i++){
             var tmp_words=r_arr[i].match(/[\w]+/g);
             if(tmp_words){
                 if(tmp_words.length>1){
@@ -831,6 +915,167 @@ function Make_Checkwords_Win(){
         var width = jQuery(this).attr("arg3");
         var height = jQuery(this).attr("arg4");
         var ptwin =new Checkwords_Win(top,left,width,height);
+        ptwin.createwin(winid);
+        ptw_list[winid]=ptwin;
+    }
+    ptw_list[winid].show();
+}
+
+// ---------------------word card win -------------------------------
+function WordCard_Win(){
+    var rt_win=[
+        {type:"static",nclass:"wc_wordcard",height:"75%",width:"100%"},
+        {type:"static",nclass:"wc_inf",height:"8%",width:"100%"},
+        {type:"button",nclass:"wc_pre",value:"previous",float:"left"},
+        {type:"button",nclass:"wc_next",value:"next",float:"right"},
+    ];
+    MulEditwindow.call(this,"pt_wordcard_win",rt_win,"0%","0%","100%","92%");
+}
+WordCard_Win.prototype=new MulEditwindow();
+
+
+WordCard_Win.prototype.createwin=function(winid,w_from,w_to) {
+    MulEditwindow.prototype.createwin.call(this, winid);
+    var ctwin=this.getclientwin();
+    var call_ob=this;
+    call_ob.heightlight(".wc_next");
+    this.build_card(w_from,w_to);
+
+    ctwin.find(".wc_pre").click(function(){
+        call_ob.card_itor(-1);
+        ctwin.find(".wc_inf").html("<----previous");
+
+    });
+
+    ctwin.find(".wc_next").click(function(){
+        call_ob.card_itor(1);
+        ctwin.find(".wc_inf").html("next ----> ");
+    });
+
+
+
+
+};
+
+WordCard_Win.prototype.build_card=function(w_from,w_to){
+
+    var ctwin=this.getclientwin();
+
+    var infowin= ctwin.find(".wc_inf");
+    var jq_wordlist=jQuery(".wordlist");
+    var word_list=[];
+    if(jq_wordlist.length==0){
+        infowin.html("there is no wordlist in this page!!");
+        return
+    }
+
+
+    if(jq_wordlist.length>0) {
+        var wd_txt = jq_wordlist.text();
+
+        var tmp="\\b{0}\\b.+\\b{1}\\b".format(w_from, w_to);
+//            var tmp="\b"+s_from+"\b.+\b"+s_to+"\b";
+
+        var reg_sr = new RegExp(tmp);
+        var rt = wd_txt.match(reg_sr);
+
+        if (rt) {
+            word_list=extract_allwords(rt[0]);
+        }else{
+            infowin.html("!!! Maybe The slice words was deleted from the wordlist,please choose another word to slice");
+        }
+    }
+
+    var word_map={};
+    for(var i=0;i<word_list.length;i++){
+        word_map[word_list[i]]=i;
+    }
+
+    var word_cards_tmp=[];
+    var tran_list=jQuery(".xxbk_open ol li");
+
+    tran_list.each(function(index){
+        var word=jQuery("div span",this).text();
+        if(word_map[word]) {
+            console.log(word_map[word]);
+            word_cards_tmp[word_map[word]] = jQuery(this).html();
+        }
+    });
+    var word_cards=[];
+    for(var key in word_cards_tmp){
+        word_cards.push(word_cards_tmp[key]);
+    }
+
+    console.dir(word_cards);
+    this.word_cards=word_cards;
+    this.card_index=0;
+};
+WordCard_Win.prototype.card_itor=function(step){
+    var ctwin=this.getclientwin();
+    this.card_index+=step;
+    if(this.card_index<0){this.card_index=0;}
+    if(this.card_index>=this.word_cards.length){this.card_index=this.word_cards.length-1;}
+    var word_c= this.word_cards[this.card_index];
+    var div_wrap='<div class="wc_wordcard_wp">{0}</div>'.format(word_c);
+    ctwin.find(".wc_wordcard").html(div_wrap);
+    mxyd_voice_onclick(".wrap_vo",ctwin[0]);
+    ctwin.find(".wrap_vo").click();
+    return word_c;
+};
+
+function Make_wordcard_win(){
+    var winid = jQuery(this).attr("id");
+    if(ptw_list[winid]==null){
+        var fromto = jQuery(this).attr("arg1");
+        var words=extract_allwords(fromto);
+        console.log(words);
+        var ptwin =new WordCard_Win();
+        ptwin.createwin(winid,words[0],words[1]);
+        ptw_list[winid]=ptwin;
+    }
+    ptw_list[winid].show();
+
+}
+
+// <<<<<<<<<<<<<<----------------------------------------------------
+
+//-----------------------------------test win -----------------------
+function XXtest_Win(top,left,width,height){
+    var rt_win=[
+        {type:"area",nclass:"ck_test_input",height:"48%",width:"100%"},
+        {type:"button",nclass:"ckbt_test",value:"test",float:"right"},
+        {type:"area",nclass:"ck_test_out",height:"48%",width:"100%"}
+    ];
+    MulEditwindow.call(this,"pt_test_win",rt_win,top,left,width,height);
+}
+XXtest_Win.prototype=new MulEditwindow();
+
+
+XXtest_Win.prototype.createwin=function(winid) {
+    MulEditwindow.prototype.createwin.call(this, winid);
+    var ctwin = this.getclientwin();
+    var call_ob = this;
+    call_ob.heightlight(".ckbt_test");
+    ctwin.find(".ckbt_test").click(function(){
+
+        var wordtxt =ctwin.find(".ck_test_input").val();
+        var word_arr = extract_allwords(wordtxt);
+        call_ob.ajax_get_defs(word_arr,"MORE",function(def_txt){
+            console.log(def_txt);
+            console.dir(ctwin);
+            ctwin.find(".ck_test_out").val(def_txt);
+        });
+    });
+};
+
+function Make_XXtest_Win(){
+    var winid = jQuery(this).attr("id");
+    if(ptw_list[winid]==null){
+        var top = jQuery(this).attr("arg1");
+        var left = jQuery(this).attr("arg2");
+        var width = jQuery(this).attr("arg3");
+        var height = jQuery(this).attr("arg4");
+        var ptwin =new XXtest_Win(top,left,width,height);
         ptwin.createwin(winid);
         ptw_list[winid]=ptwin;
     }
@@ -1374,11 +1619,11 @@ function filt_page_wordls(){
 }
 // <<<<<-----pg_convert_wordls------------
 
-function pg_show_wordlist(){
-    jQuery(".pg_show_wl").click(function(){
+function pg_show_wordlist(context){
+    jQuery(" .pg_show_wl",context).click(function(){
         jQuery(".wordlist").toggle();
     });
-    jQuery("#pg_filt_wl").click(filt_page_wordls);
+    jQuery(" #pg_filt_wl",context).click(filt_page_wordls);
 }
 
 function Two_edit_win(){
@@ -1397,6 +1642,65 @@ function Two_edit_win(){
     }
     ptw_list[buttonid].show();
 }
+// <<<<<<<<<<<<---------------translation- block------------------------
+// <<<<<<<<<<<<---------------translation- block-----------------------
+// <<<<<<<<<<<<---------------translation- block-----------------------
+// <<<<<<<<<<<<---------------translation- block-----------------------
+
+
+
+//<<<<<<<<<<<<<<---------------------xxbk_base-------------------------
+function XXBK_base_ui(subclass){
+    this.subclass=subclass;
+}
+XXBK_base_ui.xxbk_list=[];
+XXBK_base_ui.add_xxbk=function(xxbk){
+
+    XXBK_base_ui.xxbk_list.push(xxbk);
+    var xxid=XXBK_base_ui.xxbk_list.length-1;
+    return xxid;
+};
+XXBK_base_ui.get_xxbk=function(xxid){
+    var id =parseInt(xxid);
+    return XXBK_base_ui.xxbk_list[id];
+};
+XXBK_base_ui.prototype.create_ui=function(parent){
+    console.log("before . XXBK_base_ui.create_ui");
+    if(jQuery(parent).attr("init")!="n"){
+        return;
+    }
+    console.log("after . XXBK_base_ui.create_ui");
+    jQuery(parent).attr("init","y");
+    var xxid = XXBK_base_ui.add_xxbk(this);
+    var parent_txt=jQuery(parent).html();
+    var base_ui_txt='<span class="xxbk_base_title {0}" id="tt_{0}{1}" xxid="{1}">{2}</span> \
+    <div class="xxbk_base_ct {0}" style="display: none" init="n"></div>\
+    '.format(this.subclass,xxid,parent_txt);
+    this.base_ui=jQuery(base_ui_txt);
+    jQuery(parent).html("");
+    jQuery(parent).append(this.base_ui);
+    this.parant_j=jQuery(parent);
+    var call_ob=this;
+    this.parant_j.find("span.xxbk_base_title").click(function(){
+        console.log("span.xxbk_base_title click");
+        var ct_div=call_ob.parant_j.find("div.xxbk_base_ct");
+        if(ct_div.length==0){
+            call_ob.parant_j.html("xxbk_base_ui was broken!please check the page!");
+            return;
+        }
+        if(ct_div.attr("init")=='n') {
+            call_ob.init_ct_div(ct_div);
+            ct_div.attr("init",'y');
+        }
+        ct_div.toggle();
+    });
+
+
+};
+XXBK_base_ui.prototype.init_ct_div=function(ct_div_j){
+    ct_div_j.html("how are you");
+};
+
 
 // <<<<<<<<<<<<---------------syntax- block------------------------
 // <<<<<<<<<<<<---------------syntax- block------------------------
@@ -1444,8 +1748,44 @@ function xxbk_slice_click(element){
     rt_div.toggle();
 }
 
-function syntax_BK_init() {
-    jQuery(".xxbk").each(function (index, element) {
+// <<<<<<<<<<<<<<-----------------cp sidebar -------------------
+function xxbk_cp_sidebar(element){
+    jQuery(element).click(function(element){
+        ajax_xcall("tp.tpage",["sidebar"],function(data){
+           console.dir(data);
+            var dst_page=data.result;
+            window.location="/{0}?do=edit".format(dst_page);
+        });
+    });
+}
+
+//<<<<<<<<<<<<<<<<<<<-----------xxbk_open------------------------
+
+function XXBK_open(element){
+    XXBK_base_ui.call(this,"xxbk_open");
+}
+XXBK_open.prototype=new XXBK_base_ui();
+XXBK_open.prototype.init_ct_div=function(ct_div_j){
+    XXBK_base_ui.prototype.init_ct_div(ct_div_j);
+    ct_div_j.html(ct_div_j.html()+" <br/> i am XXBK_open");
+
+    var pageid=this.parant_j.attr("arg1");
+    var call_ob=this;
+
+    ajax_xcall("wiki.getPageHTML",[pageid],function(data){
+        ct_div_j.html(data.result);
+        var js_div=ct_div_j[0];
+     //   init_ui("#{0} ".format(call_ob.parant_j.attr("id")));
+        init_ui(js_div);
+        init_mxyd_voice(".wrap_vo","y");
+    });
+};
+
+
+//<<<<<<<<<<<<<<<<<<<<<<
+function syntax_BK_init(context) {
+    var sel_txt = parent+".xxbk";
+    jQuery(".xxbk",context).each(function (index, element) {
     //element == this
         var class_txt = jQuery(this).attr("class");
         var ctype = class_txt.match(/\bxxbk_[\w]+\b/);
@@ -1455,6 +1795,13 @@ function syntax_BK_init() {
                 case "xxbk_slice":
                     xxbk_slice(element);
                     break;
+                case "xxbk_sidebar":
+                    xxbk_cp_sidebar(element);
+                    break;
+                case "xxbk_open":
+                    var bk_open=new XXBK_open();
+                    bk_open.create_ui(element);
+                    break;
             }
         }
     });
@@ -1462,7 +1809,7 @@ function syntax_BK_init() {
 
 
 
-function init_ui(){
+function init_ui(context){
     /*
     var divstr='<div id="{0}_rt"><div id="{0}_txtout"></div> <div style="clear: both"></div>\
      <input id="{0}_ok" name="ok" class="button" type="button" value="ok">\
@@ -1470,19 +1817,27 @@ function init_ui(){
         */
 
 //    alert(jQuery("html").hasClass("phone"));
+
     USER_WORDLIST_NAME = 'user:'+JSINFO['user']+":wordlist";
     WORDLIST_NAME=JSINFO['wordlist_ns']+"wordlist";
 
-    syntax_BK_init();
-    pg_show_wordlist();
-    jQuery(".xxpg_learn").click(search_learn_win);
-    jQuery(".xxpg_parse").click(parse_learn_win);
-    jQuery(".xxpg_open").click(open_page_win);
-    jQuery(".xxpg_words").click(addnewwords_win);
-    jQuery(".xxpg_twoedit").click(Two_edit_win);
-    jQuery(".xxpg_checkwords").click(Make_Checkwords_Win);
+    console.log(parent+" .xxpg_learn");
+    syntax_BK_init(context);
+    pg_show_wordlist(context);
+    jQuery(" .xxpg_learn",context).click(search_learn_win);
+    jQuery(" .xxpg_parse",context).click(parse_learn_win);
+    jQuery(" .xxpg_open",context).click(open_page_win);
+    jQuery(" .xxpg_words",context).click(addnewwords_win);
+    jQuery(" .xxpg_twoedit",context).click(Two_edit_win);
+    jQuery(" .xxpg_checkwords",context).click(Make_Checkwords_Win);
+    jQuery(" .xxpg_test",context).click(Make_XXtest_Win);
+    jQuery(" .xxpg_card",context).click(Make_wordcard_win);
 
 }
 
-jQuery(xxedit_learn_add);
-jQuery(init_ui);
+jQuery(function(){
+
+    // jQuery methods go here...
+    xxedit_learn_add();
+    init_ui();
+});

@@ -56,7 +56,10 @@ class syntax_plugin_pagestat_block extends DokuWiki_Syntax_Plugin {
                     $subname=$arg_list[0];
                     $arg_count=1;
 //            $str =  '<div class="xxpg xxpg_'.$match.'" id="xxpg_'.$match+$count.'"></div>';
-                    $str2 = '<div class="xxbk xxbk_'.$subname.'" id="xxbk_'.$subname.$count.'" ';
+
+                    $str2 =<<<STRRR
+<div class="xxbk xxbk_$subname" id="xxbk_$subname$count" init="n"
+STRRR;
                     for(;$arg_count<$length;$arg_count++){
                         $str2.='arg'.$arg_count.'="'.$arg_list[$arg_count].'" ';
                     }

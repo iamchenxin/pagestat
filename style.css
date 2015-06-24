@@ -107,13 +107,13 @@
     background-repeat: no-repeat;
 }
 
-.pt_clientwin ul{
+.pt_clientwin ul.xxx{
     list-style: none;
     margin: 0px;
     padding: 0px;
 }
 
-.pt_clientwin li{
+.pt_clientwin li.xxx{
     display: block;
     float: left;
     margin: 0 1em 0 0;
@@ -172,4 +172,38 @@
 
 .wordlist input{
     font-size: 75%;
+}
+
+.xxbk_sidebar{
+    color: #0066aa;
+    cursor: pointer;
+}
+
+.pt_wordcard_win li{
+    float: none;
+}
+.desktop .wc_wordcard_wp{
+    height: auto;
+    width: 70%;
+    font-size: 2em;
+    margin-left: auto;
+    margin-right: auto;
+}
+.mobile .wc_wordcard_wp{
+    height: auto;
+    width: auto;
+    font-size: 1em;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.mobile .wc_wordcard_wp ul{
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+}
+.mobile .wc_wordcard_wp li{
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
 }

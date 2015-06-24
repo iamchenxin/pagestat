@@ -28,7 +28,8 @@ class  action_plugin_pagestat extends DokuWiki_Action_Plugin
         $my_rpc_call=array(
             'ps.get_wordlist' => array('pagestat', 'get_wordlist'),
             'ps.check_word'=>array('pagestat', 'check_word'),
-            'ps.getUser' => array('pagestat', 'getUser')
+            'ps.getUser' => array('pagestat', 'getUser'),
+            'ps.get_defs'=>array('pagestat','get_defs')
         );
         $event->data=array_merge($event->data,$my_rpc_call);
     }

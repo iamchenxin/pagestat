@@ -163,4 +163,35 @@ EXTSEL;
         $sqli->close();
         return $out_ob;
     }
+
+    function get_defs($words_arr,$return_inf="SIMPLE"){//$return_inf = 'WORD' or 'SIMPLE'
+        if(is_array( $words_arr)!=true||count($words_arr)<1){
+            throw new \xx_jsonrpc\E_Invalid_params("invalid words array");
+        }
+        $sqli = new mysqli("localhost", "www-data", "135790", "gldic");
+        $sql_arr_txt = $this->make_sql_artxt($words_arr);
+
+        switch($return_inf){
+            case "MORE":
+                $sql_defs_sel=<<<DEFSMORE
+SELECT word,pron,defsimp,defen FROM more WHERE word IN ($sql_arr_txt)
+DEFSMORE;
+                break;
+            case "SIMPLE":
+                $sql_defs_sel=<<<DEFSSIMP
+SELECT word,pron,defsimp FROM simple WHERE word IN ($sql_arr_txt)
+DEFSSIMP;
+                break;
+            default:
+                throw new \xx_jsonrpc\E_Internal_error("get_defs wrong return_inf=$return_inf");
+        }
+        $rt=$sqli->query($sql_defs_sel);
+
+        $defs=$rt->fetch_all();
+        $sqli->close();
+        return $defs;
+
+    }
+
+
 }
