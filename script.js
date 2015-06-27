@@ -161,9 +161,10 @@ function PTwindow(ptsubclass,pttop,ptleft,ptwidth,ptheight){
     this.ptheight=ptheight;
     this.ptsubclass=ptsubclass;
 
-
-
 }
+
+
+
 PTwindow.prototype.createwin=function(winid){
     var divstr='<div class="pt_window {0}" id="{0}{1}" winid="{1}" ><div class="pt_clientwin"></div> <div style="clear: both"></div>\
         <input name="close" class="pt_button_r ptclose" type="button" value="close"> </div> '.format(this.ptsubclass,winid);
@@ -334,9 +335,9 @@ function PTE_make_voice(word){
 }
 
 PTwindow_E.prototype.generate_def_more=function(word_def) {
-    console.dir(word_def);
     var indent = 1;
     var out_txt = "";
+
 
     var word = word_def[0];
     var pron = word_def[1];
@@ -379,6 +380,8 @@ PTwindow_E.prototype.ajax_get_defs=function(words_arr,status,xcallback){
                var word_def=defs_map[words_arr[i]];
                if(word_def) {
                    out_txt += call_ob.generate_def_more(word_def);
+               }else{
+                   out_txt += "  - {0} : !!!!!NO DEF!!!!!\n".format(words_arr[i]);
                }
            }
            xcallback(out_txt);
@@ -995,9 +998,8 @@ WordCard_Win.prototype.build_card=function(w_from,w_to){
     var tran_list=jQuery(".xxbk_open ol li");
 
     tran_list.each(function(index){
-        var word=jQuery("div span",this).text();
-        if(word_map[word]) {
-            console.log(word_map[word]);
+        var word=jQuery("div span.wrap_vo",this).text();
+        if(word&&word_map[word]) {
             word_cards_tmp[word_map[word]] = jQuery(this).html();
         }
     });
@@ -1080,6 +1082,8 @@ function Make_XXtest_Win(){
         ptw_list[winid]=ptwin;
     }
     ptw_list[winid].show();
+    ptw_list[winid].getwin().draggable();
+    console.log("ptw_list[winid].draggable()");
 }
 
 // ----------- list windows --------------
