@@ -9,9 +9,17 @@ if(!defined('DOKU_INC')) define('DOKU_INC',dirname(__FILE__).'/../../');
 require_once(DOKU_INC.'inc/init.php');
 require_once(DOKU_INC."inc/RemoteAPICore.php");
 require_once(DOKU_INC."inc/remote.php");
+require_once(DOKU_INC."inc/remoteAPI_l.php");
 require_once (DOKU_INC . 'inc/parserutils.php');
 
 class remote_plugin_pagestat extends DokuWiki_Remote_Plugin {
+    protected $helper;
+    protected $remoteapi;
+    function __construct(){
+        $this->helper=new helper_plugin_pagestat();
+        $this->remoteapi=new remoteAPI_l();
+    }
+
     public function _getMethods() {
         return array(
             'test' => array(
@@ -166,7 +174,7 @@ EXTSEL;
 
     function get_defs($words_arr,$return_inf="SIMPLE"){//$return_inf = 'WORD' or 'SIMPLE'
         if(is_array( $words_arr)!=true||count($words_arr)<1){
-            throw new \xx_jsonrpc\E_Invalid_params("invalid words array");
+            throw new \xx_jsonrpc\E_Invalid_params("params error. invalid words array. ");
         }
         $sqli = new mysqli("localhost", "www-data", "135790", "gldic");
         $sql_arr_txt = $this->make_sql_artxt($words_arr);
@@ -192,6 +200,86 @@ DEFSSIMP;
         return $defs;
 
     }
+
+    public function Format_def_more($word_def){
+        $word = $word_def[0];
+        $pron = $word_def[1];
+        $defsimp = $word_def[2];
+        $defen_txt = $word_def[3];
+        $out_txt="";
+        $out_txt.="===== $word =====\n";
+        $out_txt.="  * $word ($pron) \\\\ **$defsimp**\n";
+        if($defen_txt){
+            $defen=json_decode($defen_txt,TRUE);
+
+            foreach($defen as $pos=>$subdefs){
+                $out_txt.="    - $pos\n";
+                foreach($subdefs as $index=>$subd){
+                    $out_txt.="      - $''{$subd['mean']}''\\\\ {$subd['sen']}\n";
+                }
+            }
+        }
+        return $out_txt;
+    }
+
+    public function Build_defmore_list($word_list){
+        $word_def_list=$this->get_defs($word_list,"MORE");
+        $def_map=array();
+        foreach($word_def_list as $index=>$word_def){
+            $def_map[$word_def[0]]=$word_def;
+        }
+
+        $out_txt="";
+        foreach($word_list as $i=>$word){
+
+            if(isset($def_map[$word])){
+                $def = $def_map[$word];
+
+                $out_txt.=$this->Format_def_more($def);
+            }else{
+                $out_txt.="===== $word !!! =====\n";
+                $out_txt.= "  - $word : !!!!!NO DEF!!!!!\n";
+            }
+        }
+        return $out_txt;
+
+    }
+
+
+    public function Cp_subtitle($pageid,$subtitle_txt){
+
+
+        $filename=end(explode(":",$pageid));
+
+        $subid="$pageid:{$this->getConf('subtitle_dst')}";
+        $save_txt=<<<SAVETXT
+<code - $filename.srt>
+$subtitle_txt
+</code>
+SAVETXT;
+
+        $rt=$this->remoteapi->putPage($subid,$save_txt,["sum"=>"generate by Cp_subtitle"]);
+        return $pageid;
+    }
+
+    public function Cp_deflist($pageid,$word_list){
+
+        $def_txt=$this->Build_defmore_list($word_list);
+        $defid="$pageid:{$this->getConf('def_dst')}";
+        $rt=$this->remoteapi->putPage($defid,$def_txt,["sum"=>"generate by Cp_deflist"]);
+        return $pageid;
+    }
+
+    public function Cp_wordlist($pageid,$txt){
+        $wordlistid="$pageid:{$this->getConf('wordlist_dst')}";
+        $rt=$this->remoteapi->putPage($wordlistid,$txt,["sum"=>"generate by Cp_wordlist"]);
+        return $pageid;
+    }
+
+    public function Cp_stable($pageid){
+
+    }
+
 
 
 }

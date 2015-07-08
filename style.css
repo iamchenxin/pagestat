@@ -135,12 +135,25 @@
     overflow-y: scroll;
 }
 
+.xxbk_base_title,
 .xxpg{
     cursor:pointer;
-    float: left;
-    margin: 1px;
-    border: 1px dashed #999;
+    margin: 2px 10px;
+    padding: 0px 5px;
+    border: 1px outset #999;
+    font-size: 0.85em;
 }
+
+div.xxpg{
+    width: 80%;
+    text-align: center;
+}
+
+div.xxbk_base_ct{
+
+}
+
+
 .pt_edit_static{
     overflow-y: scroll;
 }
@@ -207,3 +220,48 @@
     margin: 0px;
     padding: 0px;
 }
+
+
+
+#dokuwiki__pagetools ul li .ptools_main,
+#dokuwiki__pagetools ul li .ptools_edit{
+    background-position: right 0;
+}
+#dokuwiki__pagetools ul li .ptools_main:before {
+    content: url(pagetool2.png);
+    margin-top: 0;
+}
+#dokuwiki__pagetools:hover ul li .ptools_main,
+#dokuwiki__pagetools ul li .ptools_main:focus,
+#dokuwiki__pagetools ul li .ptools_main:active {
+    background-image: url(pagetool2.png);
+}
+#dokuwiki__pagetools ul li .ptools_main:hover,
+#dokuwiki__pagetools ul li .ptools_main:active,
+#dokuwiki__pagetools ul li .ptools_main:focus ,
+#dokuwiki__pagetools ul li .ptools_edit:hover,
+#dokuwiki__pagetools ul li .ptools_edit:active,
+#dokuwiki__pagetools ul li .ptools_edit:focus {
+    background-position: right -45px;
+}
+
+#dokuwiki__pagetools ul li .ptools_edit:before {
+    content: url(ptback.png);
+    margin-top: 0;
+}
+div.pt_pa_sub:hover ul li .ptools_edit,
+#dokuwiki__pagetools ul li .ptools_edit:focus,
+#dokuwiki__pagetools ul li .ptools_edit:active {
+    background-image: url(ptback.png);
+}
+
+div.pt_pa_sub{
+    position: fixed;
+    display: none;
+}
+
+#feedback { font-size: 1.4em; }
+div.pt_pa_sub .ui-selectable .ui-selecting { background: #FECA40; }
+div.pt_pa_sub .ui-selectable .ui-selected { background: #F39814; color: white; }
+div.pt_pa_sub .ui-selectable{ list-style-type: none; margin: 0; padding: 0; width: auto; }
+div.pt_pa_sub .ui-selectable li { margin: 3px; padding: 0.4em; font-size: 1.4em; height: 18px; }

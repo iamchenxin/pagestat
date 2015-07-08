@@ -6,3 +6,7 @@
 
 $conf['g_wordlists']      = "wordlist";
 $conf['user_wordlists']    =  'wordlist';
+
+$conf['subtitle_dst'] ='subtitle';
+$conf['stable_dst'] ='stable';
+$conf['def_dst'] ='def';

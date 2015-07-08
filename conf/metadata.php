@@ -5,3 +5,7 @@
  */
 $meta['g_wordlists']      = array('string');
 $meta['user_wordlists']      = array('string'); // minutes
+
+$meta['subtitle_dst'] =array('string');
+$meta['stable_dst'] =array('string');
+$meta['def_dst'] =array('string');

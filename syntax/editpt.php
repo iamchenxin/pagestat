@@ -9,22 +9,23 @@ if(!defined('DOKU_INC')) define('DOKU_INC',realpath(dirname(__FILE__).'/../../')
 if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
 require_once(DOKU_PLUGIN . 'syntax.php');
 
-class syntax_plugin_pagestat_edit extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_pagestat_editpt extends DokuWiki_Syntax_Plugin {
     private $pg_count=0;
-    function getType(){ return 'substition';}
-    function getPType(){ return 'block';}
-    public function getSort() { return 321; }
-    public function getAllowedTypes() { return array('formatting', 'substition', 'disabled'); }
-    public function connectTo($mode) { $this->Lexer->addEntryPattern('<PT.*?>(?=.*?</PT>)',$mode,'plugin_pagestat_edit'); }
-    public function postConnect() { $this->Lexer->addExitPattern('</PT>','plugin_pagestat_edit'); }
+    function getType(){ return 'formatting';}
+    function getAllowedTypes() { return array('formatting', 'substition', 'disabled'); }
+    function getPType(){ return 'normal';}
+    public function getSort() { return 323; }
+
+    public function connectTo($mode) { $this->Lexer->addEntryPattern('<pt.*?>(?=.*?</pt>)',$mode,'plugin_pagestat_editpt'); }
+    public function postConnect() { $this->Lexer->addExitPattern('</pt>','plugin_pagestat_editpt'); }
 
 
 
-/*
-    public function connectTo($mode) { $this->Lexer->addEntryPattern($this->entry_pattern,$mode,'plugin_pagestat_'.$this->getPluginComponent());}
-    public function connectTo($mode) { $this->Lexer->addSpecialPattern('<PT.*?>',$mode,'plugin_now');}
-   function connectTo($mode) { $this->Lexer->addEntryPattern('\+\+\+\+.*?\|(?=.*\+\+\+\+)',$mode,'plugin_folded_div'); }
-*/
+    /*
+        public function connectTo($mode) { $this->Lexer->addEntryPattern($this->entry_pattern,$mode,'plugin_pagestat_'.$this->getPluginComponent());}
+        public function connectTo($mode) { $this->Lexer->addSpecialPattern('<PT.*?>',$mode,'plugin_now');}
+       function connectTo($mode) { $this->Lexer->addEntryPattern('\+\+\+\+.*?\|(?=.*\+\+\+\+)',$mode,'plugin_folded_div'); }
+    */
     public function handle($match, $state, $pos, Doku_Handler $handler){
         switch ($state) {
             case DOKU_LEXER_ENTER :
@@ -57,7 +58,7 @@ class syntax_plugin_pagestat_edit extends DokuWiki_Syntax_Plugin {
 
                     $pt_arg=implode(";",array_slice($arg_list,1));
                     $str2 =<<<MYSTR2
-<div class="xxpg xxpg_$subname" id="xxpg_$subname$count" pt_arg="$pt_arg" pt_arg_count="$length" >
+<span class="xxpg xxpg_$subname" id="xxpg_$subname$count" pt_arg="$pt_arg" pt_arg_count="$length" >
 MYSTR2;
                     $renderer->doc .= $str2;
 
@@ -68,7 +69,7 @@ MYSTR2;
                     $renderer->doc .= $renderer->_xmlEntities($match);
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= "</div>";
+                    $renderer->doc .= "</span>";
                     break;
             }
             return true;

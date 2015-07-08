@@ -119,80 +119,131 @@ function make_set(w_list){
 
 //--------------UI---------------------
 
-var ptw_list=new Object();
+
 function tsshow(event){
     event.data.fuc.call(event.data.obj);
 }
 
-function PTwindow(ptsubclass,pttop,ptleft,ptwidth,ptheight){
-    if(pttop==null){
-        pttop="2%";
-    }else{
-
-        if(pttop.charAt(pttop.length-1)!="%" ){
-            pttop=pttop+"px";
-        }
-
-    }
-    if(ptleft==null){
-        ptleft="2%";
-    }else{
-        if(ptleft.charAt(ptleft.length-1)!="%" ){
-            ptleft=ptleft+"px";
-        }
-    }
-    if(ptwidth==null){
-        ptwidth="auto";
-    }else{
-        if(ptwidth.charAt(ptwidth.length-1)!="%" ){
-            ptwidth=ptwidth+"px";
-        }
-    }
-    if(ptheight==null){
-        ptheight="auto";
-    }else{
-        if(ptheight.charAt(ptheight.length-1)!="%" ){
-            ptheight=ptheight+"px";
-        }
-    }
-    this.pttop=pttop;
-    this.ptleft=ptleft;
-    this.ptwidth=ptwidth;
-    this.ptheight=ptheight;
-    this.ptsubclass=ptsubclass;
-
-}
 
 
 
-PTwindow.prototype.createwin=function(winid){
+
+/*
+var params={
+    top:
+    left:
+    width:
+    height:
+    subclass:
+    draggable:
+};
+*/
+function PTwindow(param_obj){
+
+    this.top=PTwindow.MakeDimen({value:param_obj.top ,default_v:"2%"});
+    this.left=PTwindow.MakeDimen({value:param_obj.left ,default_v:"2%"});
+    this.width=PTwindow.MakeDimen({value:param_obj.width ,default_v:"auto"});
+    this.height=PTwindow.MakeDimen({value:param_obj.height ,default_v:"auto"});
+    this.subclass=param_obj.subclass;
+    this.draggable=(param_obj.draggable!=undefined)?param_obj.draggable:true;
+    this.winid=param_obj.winid;
+
     var divstr='<div class="pt_window {0}" id="{0}{1}" winid="{1}" ><div class="pt_clientwin"></div> <div style="clear: both"></div>\
-        <input name="close" class="pt_button_r ptclose" type="button" value="close"> </div> '.format(this.ptsubclass,winid);
+        <input name="close" class="pt_button_r ptclose" type="button" value="close"> </div> '.format(this.subclass,this.winid);
     this.jqwin=jQuery(divstr);
     jQuery('body').append(this.jqwin);
+    if(this.draggable){
+        this.jqwin.draggable();
+    }
     this.jqwin.children("input[name='close']").click(function(){
         jQuery(this).parent().slideUp(500);
     });
-    ptw_list[winid]=this;
-    return this.jqwin;
+
+    if(jQuery("html").hasClass("phone")){
+        this.jqwin.css("width","100%");
+        this.jqwin.css("height",this.height);
+        this.jqwin.css("top",this.top);
+        this.jqwin.css("left","0%");
+    }else{
+        this.jqwin.css("width",this.width);
+        this.jqwin.css("height",this.height);
+        this.jqwin.css("top",this.top);
+        this.jqwin.css("left",this.left);
+    }
+}
+/*var param_obj_MakeDimen={
+ deft:1, //"default data",
+ value:0 //""
+ };*/
+PTwindow.MakeDimen=function(param_obj){
+
+    var deft=(param_obj.default_v!=undefined)?param_obj.default_v:"auto";
+    var outv = param_obj.value;
+    if(outv==null){
+        outv=deft;
+    }else{
+        if(outv.charAt(outv.length-1)!="%" ){
+            outv=outv+"px";
+        }
+    }
+    return outv;
 };
+PTwindow.Extract_ptparams=function(jwin){
+
+    var arg_txt=jwin.attr("pt_arg");
+    var arg_list=arg_txt.split(";");
+    var out_params={};
+    for(var i=0;i<arg_list.length;i++){
+        var sub_arg=arg_list[i].split("=");
+        if(sub_arg.length>=2){
+            out_params[sub_arg[0].trim()]=sub_arg[1];
+        }else{
+            out_params["BAD"]=arg_list[i];
+        }
+    }
+    var winid=jwin.attr("id");
+    if(winid){
+        out_params.winid=winid;
+    }else{
+        throw "the dom who open ptwindow must has a id!";
+    }
+    return out_params;
+}
+PTwindow.ptw_list={};
+PTwindow.Factory=function(window_type,params_obj){
+    var winid= params_obj.winid;
+    if(winid==null){
+        throw "winid should not null!";
+    }
+    if(!PTwindow.GetObj(winid)){
+        PTwindow.ptw_list[winid]=new window_type(params_obj);
+    }
+    return PTwindow.ptw_list[winid];
+};
+PTwindow.Factory_byElement=function(window_type,element) {
+    var factory_win = jQuery(element);
+    var winid=factory_win.attr("id");
+    if(!PTwindow.GetObj(winid)){
+        PTwindow.ptw_list[winid]=new window_type(params_obj);
+    }else{
+        var params = PTwindow.Extract_ptparams(factory_win);
+        return PTwindow.Factory(window_type,params);
+    }
+};
+
+PTwindow.GetObj=function(winid){
+    return PTwindow.ptw_list[winid];
+};
+
+
+
 PTwindow.prototype.get_closebt=function(){return this.jqwin.children(".ptclose");};
 PTwindow.prototype.getwin=function(){return this.jqwin;};
 PTwindow.prototype.getwinid=function(){return this.jqwin.attr("winid");};
 PTwindow.prototype.getclientwin=function(){return this.jqwin.children(".pt_clientwin");};
 PTwindow.prototype.show=function(speed){
     if(speed!=true){speed=500;}
-    if(jQuery("html").hasClass("phone")){
-        this.jqwin.css("width","100%");
-        this.jqwin.css("height",this.ptheight);
-        this.jqwin.css("top",this.pttop);
-        this.jqwin.css("left","0%");
-    }else{
-        this.jqwin.css("width",this.ptwidth);
-        this.jqwin.css("height",this.ptheight);
-        this.jqwin.css("top",this.pttop);
-        this.jqwin.css("left",this.ptleft);
-    }
+
     this.jqwin.slideDown(speed);
 };
 PTwindow.prototype.clickby= function(trigger){
@@ -233,6 +284,37 @@ PTwindow.prototype.heightlight=function(class_name){
 
 };
 
+// ----------------------------log ---win ----------------
+function PTlog(){
+    PTwindow.call(this,{winid:"xxxptlog",subclass:"cccptlog",width:"auto",height:"auto"});
+
+    this.getwin().css({
+        position:"fixed",
+        top:"",
+        left:"",
+        bottom:"8px",
+        right:"8px"
+    });
+    this.getclientwin().css({
+        "overflow-y": "auto"
+    });
+
+}
+PTlog.prototype=Object.create(PTwindow.prototype);
+
+PTlog.prototype.log=function(txt){
+    this.getclientwin().html(txt);
+    this.getwin().stop().fadeIn(300).fadeTo(5000,0.5).slideUp(500);
+};
+PTlog.prototype.loga=function(txt){
+    var out_txt =this.getclientwin().html()+txt;
+    this.log(out_txt);
+};
+
+var ptlog;
+
+// ==============
+
 // ------------- english ---special
 function helper_build_opt(prefix,arr){
     var opts="";
@@ -242,14 +324,12 @@ function helper_build_opt(prefix,arr){
     return opts;
 }
 
-function PTwindow_E(ptsubclass,pttop,ptleft,ptwidth,ptheight){
-    PTwindow.call(this,ptsubclass,pttop,ptleft,ptwidth,ptheight);
-}
-PTwindow_E.prototype=new PTwindow();
+function PTwindow_E(param_obj){
+    if(param_obj.subclass==null){
+        param_obj.subclass="PTwindow_E";
+    }
+    PTwindow.call(this,param_obj);
 
-PTwindow_E.prototype.createwin=function(winid) {
-    PTwindow.prototype.createwin.call(this, winid);
-    // english --------------
     var g_pre="user:admin:";
     this.g_wordlists=this.gain_wlistarray(JSINFO['g_wordlists']);
     this.default_wordlist=g_pre+this.g_wordlists[0];
@@ -259,7 +339,10 @@ PTwindow_E.prototype.createwin=function(winid) {
     this.u_wordlists=this.gain_wlistarray(JSINFO['user_wordlists']);
     this.u_wordlist_select='<select class="u_w_selct" name="u_w_selct">{0}\
     </select>'.format('<option value="none">none</option>'+helper_build_opt(u_pre,this.u_wordlists));
-};
+}
+PTwindow_E.prototype=Object.create( PTwindow.prototype);
+
+
 function helper_pe_gselect(jq_ob){
     var g_wordlist = jq_ob.find("select.g_w_selct option:selected").html();
     var u_wordlist = jq_ob.find("select.u_w_selct option:selected").html();
@@ -394,16 +477,16 @@ PTwindow_E.prototype.ajax_get_defs=function(words_arr,status,xcallback){
 // <<<<<<<<-------------------------
 
 // ---------------------Editwindow----------------
-function Editwindow(ptsubclass,pttop,ptleft,ptwidth,ptheight){
-    PTwindow.call(this,ptsubclass,pttop,ptleft,ptwidth,ptheight);
-}
-Editwindow.prototype=new PTwindow();
+function Editwindow(param_obj){
+    param_obj.subclass=param_obj.subclass?param_obj.subclass:"Editwindow";
+    PTwindow.call(this,param_obj);
 
-Editwindow.prototype.createwin=function(winid) {
-    PTwindow.prototype.createwin.call(this, winid);
     var workdiv =jQuery('<div class="pt_edit_static"></div><textarea class="pt_edit_area" name="pt_edit" class="edit"></textarea> <div style="clear: both"></div>');
     this.getclientwin().append(workdiv);
-};
+}
+Editwindow.prototype=Object.create( PTwindow.prototype);
+
+
 Editwindow.prototype.get_edit_static=function(){
     return this.getclientwin().children(".pt_edit_static");
 };
@@ -415,14 +498,14 @@ Editwindow.prototype.get_edit_area=function(){
 
 
 // ---------------------MulEditwindow----------------
-function MulEditwindow(ptsubclass,edit_array,pttop,ptleft,ptwidth,ptheight){
-    PTwindow_E.call(this,ptsubclass,pttop,ptleft,ptwidth,ptheight);
-    this.edit_array=edit_array;
-}
-MulEditwindow.prototype=new PTwindow_E();
+/*
+ param_obj.rt_win;
+* */
+function MulEditwindow(param_obj){
+    param_obj.subclass=param_obj.subclass?param_obj.subclass:"MulEditwindow";
+    PTwindow_E.call(this,param_obj);
+    this.edit_array=param_obj.rt_win;
 
-MulEditwindow.prototype.createwin=function(winid) {
-    PTwindow_E.prototype.createwin.call(this, winid);
     var edit_array =this.edit_array;
     var outtxt="";
     for(var i=0;i<edit_array.length;i++){
@@ -454,7 +537,10 @@ MulEditwindow.prototype.createwin=function(winid) {
     outtxt+='<div style="clear: both"></div>';
     var workdiv =jQuery(outtxt);
     this.getclientwin().append(workdiv);
-};
+}
+MulEditwindow.prototype=Object.create( PTwindow_E.prototype);
+
+
 MulEditwindow.prototype.ptlog=function(str){
     var logblock= this.getwin().find(".pt_edit_log");
     logblock.html(logblock.html()+str);
@@ -572,7 +658,9 @@ function extract_words_gt2(txt){
 
 
 function Analyze_Win(){
-    var rt_win=[{type:"static",nclass:"al_edit_src",height:"auto",width:"100%"},
+    var rt_win=[
+        {type:"area",nclass:"al_subt_src",height:"60%",width:"100%"},
+        {type:"static",nclass:"al_edit_src",height:"auto",width:"100%"},
         {type:"wd_select"},
         {type:"button",nclass:"al_filtword",value:"filt word",float:"right"},
         {type:"area",nclass:"al_edit_words",height:"48%",width:"100%",display:"none"},
@@ -581,18 +669,12 @@ function Analyze_Win(){
         {type:"area",nclass:"al_edit_more",height:"48%",width:"100%",display:"none"},
         {type:"button",nclass:"al_makewords",value:"Make new wordlist",float:"right",display:"none"},
     ];
-    MulEditwindow.call(this,"pt_analyze_win",rt_win,"0%","3%","93%","92%");
-}
-Analyze_Win.prototype=new MulEditwindow();
+    var params={
+      top: "0%",left:"3%",width:"93%",height:"92%", rt_win:rt_win,subclass:"pt_analyze_win"
+    };
+    MulEditwindow.call(this,params);
 
-
-Analyze_Win.prototype.createwin=function(winid) {
-    MulEditwindow.prototype.createwin.call(this, winid);
-//    var okbt = jQuery('<input id="pagestat_insert" name="ok" class="pt_button_r" type="button" value="ok">');
-//    var checkbt = jQuery('<input id="pagestat_check" name="check" class="pt_button_r" type="button" value="check word">');
-//    this.get_closebt().after(checkbt);
-//    this.get_closebt().after(okbt);
-
+    self.subtitle=jQuery(".al_subt_src").val();
 
     this.heightlight(".al_filtword");
     var call_ob=this;
@@ -601,7 +683,6 @@ Analyze_Win.prototype.createwin=function(winid) {
         jQuery(this).hide();
         call_ob.analyze_word();
     });
-
 
     this.getwin().find("input.al_checkword").click(function(){
         jQuery(this).hide();
@@ -626,8 +707,10 @@ Analyze_Win.prototype.createwin=function(winid) {
         var out_jqwin=jQuery("#wiki__text");
         call_ob.make_newwords(in_jqwin,out_jqwin);
     });
+}
+Analyze_Win.prototype=Object.create( MulEditwindow.prototype);
 
-};
+
 
 
 Analyze_Win.prototype.analyze_word=function(){
@@ -642,8 +725,8 @@ Analyze_Win.prototype.analyze_word=function(){
 
         var wd_filter = wordlisttxt.split(",");
 
-
-        var texttmp = jQuery("#wiki__text").val();
+        self.subtitle=jQuery(".al_subt_src").val();
+        var texttmp = self.subtitle;
         var text = texttmp.toLocaleLowerCase();
         var txlist= extract_words_gt2(text);
 
@@ -767,7 +850,13 @@ function get_pagename(){
 }
 
 Analyze_Win.prototype.make_newwords=function(in_jqwin,out_jqwin){
+
     var newwords = extract_allwords(in_jqwin.val());
+    var subtitle_id=JSINFO['id']+":"+JSINFO['subtitle_dst'];
+    var subt_name=get_pagename();
+    var wordmean_id=JSINFO['id']+":"+JSINFO['def_dst'];
+    var wordlist_id=JSINFO['id']+":"+JSINFO['wordlist_dst'];
+
     var out_str="====== Movie Inf ======\n";
     out_str+="\nLike genre,stars,director and more,please editor me\n";
     out_str+="====== wordlist ======\n";
@@ -778,48 +867,49 @@ Analyze_Win.prototype.make_newwords=function(in_jqwin,out_jqwin){
     out_str+="\n====== Notice ======\n";
     out_str+="\n some hard grammar or sentence in movie,please editor me\n";
     out_str+="\n====== Words Meaning ======\n";
+    out_str+="The words meaning location [[{0}]]".format(wordmean_id);
+    out_str+="<BK open {0}>Show All New Word Meaning</BK>\n".format(wordmean_id);
 
     out_str+="\n====== Subtitle ======\n";
-    out_str+="<code - {0}.srt>\n".format(get_pagename());
-    out_str+=out_jqwin.val();
-    out_str+='\n</code>';
+    out_str+="The srt file location [[{0}]]\\\\ \n".format(subtitle_id);
+    out_str+="<BK open {0}>Show {1}.srt </BK>\n".format(subtitle_id,subt_name);
+
 
     out_jqwin.val(out_str);
+    console.log(subt_name+"---"+JSINFO['id']);
+    ajax_xcall("ps.cp_defs",[JSINFO['id'],newwords],function(data){
+        console.dir(data);
+    });
+
+    ajax_xcall("ps.cp_subtitle",[JSINFO['id'],self.subtitle],function(data){
+        console.dir(data);
+    });
+
+    ajax_xcall("ps.cp_wordlist",[JSINFO['id'],newwords.join(",")],function(data){
+        console.dir(data);
+    });
 
     this.getwin().slideUp(500);
 };
 
-var xx_analyze_win;
 
-function xxedit_learn_add(){
-    var $sizect = jQuery('#size__ctl');
-    var sizect=$sizect[0];
-    if(!sizect) {
-        xx_analyze_win=null;
-        return;
-    }
 
-    var mdiv =jQuery("<div id='pagestat_div'></div>");
-    var btanal=jQuery("<input name='anal' class='button' type='button' value='Analyze'>");
-    var btword=jQuery("<input name='bword' class='button' type='button' value='Merge'>");
+function Init_english_edit_tool(){
 
-    mdiv.append(btanal);
-    mdiv.append(btword);
-    jQuery("#wiki__editbar").after(mdiv);
+    var con_win= jQuery(".pt_pa_sub");
 
-    btanal.click(function(){
 
-        if(xx_analyze_win!=true){
-            xx_analyze_win=new Analyze_Win();
-            xx_analyze_win.createwin("analyze_w");
-        }
-
-        xx_analyze_win.show(1000);
-//        xx_analyze_win.ptlog("get filter list~~~<br/>");
+    con_win.find(".xxpg_analyze").click(function(){
+        var ptana=PTwindow.Factory(Analyze_Win,{winid:"analyze_w"});
+        ptana.show(1000);
+        ptlog.log("hello,iam xxpg_analyze click : {0}".format(jQuery(this).html()));
     });
-    btword.click(sort_wordlist);
+
+    con_win.find(".xxpg_merge").click(sort_wordlist);
 
 }
+
+
 
 
 //----------------------
@@ -872,7 +962,7 @@ function sort_wordlist(){
 
 //------------------------------------
 //--------------check words windows -----------------
-function Checkwords_Win(top,left,width,height){
+function Checkwords_Win(param_obj){
     var rt_win=[
         {type:"area",nclass:"ck_edit_words",height:"48%",width:"100%"},
         {type:"button",nclass:"ckbt_checkword",value:"check word",float:"right"},
@@ -880,13 +970,10 @@ function Checkwords_Win(top,left,width,height){
         {type:"button",nclass:"ckbt_fullinf",value:"get full word inf",float:"right",display:"none"},
         {type:"button",nclass:"ckbt_sort",value:"sort words",float:"right",display:"none"}
     ];
-    MulEditwindow.call(this,"pt_checkwords_win",rt_win,top,left,width,height);
-}
-Checkwords_Win.prototype=new MulEditwindow();
+    param_obj.rt_win=rt_win;
+    param_obj.subclass="pt_checkwords_win";
+    MulEditwindow.call(this,param_obj);
 
-
-Checkwords_Win.prototype.createwin=function(winid) {
-    MulEditwindow.prototype.createwin.call(this, winid);
     var ctwin=this.getclientwin();
     var call_ob=this;
     call_ob.heightlight(".ckbt_checkword");
@@ -908,37 +995,33 @@ Checkwords_Win.prototype.createwin=function(winid) {
     ctwin.find(".ckbt_sort").click(function(){
         call_ob.sortword_inplace(ctwin.find(".ck_full_words"));
     });
-};
+}
+Checkwords_Win.prototype=Object.create(MulEditwindow.prototype);
+
+
 
 function Make_Checkwords_Win(){
-    var winid = jQuery(this).attr("id");
-    if(ptw_list[winid]==null){
-        var top = jQuery(this).attr("arg1");
-        var left = jQuery(this).attr("arg2");
-        var width = jQuery(this).attr("arg3");
-        var height = jQuery(this).attr("arg4");
-        var ptwin =new Checkwords_Win(top,left,width,height);
-        ptwin.createwin(winid);
-        ptw_list[winid]=ptwin;
-    }
-    ptw_list[winid].show();
+
+    var params= PTwindow.Extract_ptparams(jQuery(this));
+    var ptwin = PTwindow.Factory(Checkwords_Win,params);
+    ptwin.show();
+
 }
 
 // ---------------------word card win -------------------------------
-function WordCard_Win(){
+function WordCard_Win(param_obj){
     var rt_win=[
         {type:"static",nclass:"wc_wordcard",height:"75%",width:"100%"},
         {type:"static",nclass:"wc_inf",height:"8%",width:"100%"},
         {type:"button",nclass:"wc_pre",value:"previous",float:"left"},
         {type:"button",nclass:"wc_next",value:"next",float:"right"},
     ];
-    MulEditwindow.call(this,"pt_wordcard_win",rt_win,"0%","0%","100%","92%");
-}
-WordCard_Win.prototype=new MulEditwindow();
+    var params={winid:param_obj.winid,subclass:"pt_wordcard_win",rt_win:rt_win,top:"0%",left:"0%",width:"100%",height:"92%"};
+    MulEditwindow.call(this,params);
 
+    var w_from=param_obj.from;
+    var w_to=param_obj.to;
 
-WordCard_Win.prototype.createwin=function(winid,w_from,w_to) {
-    MulEditwindow.prototype.createwin.call(this, winid);
     var ctwin=this.getclientwin();
     var call_ob=this;
     call_ob.heightlight(".wc_next");
@@ -955,10 +1038,10 @@ WordCard_Win.prototype.createwin=function(winid,w_from,w_to) {
         ctwin.find(".wc_inf").html("next ----> ");
     });
 
+}
+WordCard_Win.prototype=Object.create(MulEditwindow.prototype) ;
 
 
-
-};
 
 WordCard_Win.prototype.build_card=function(w_from,w_to){
 
@@ -1026,16 +1109,11 @@ WordCard_Win.prototype.card_itor=function(step){
 };
 
 function Make_wordcard_win(){
-    var winid = jQuery(this).attr("id");
-    if(ptw_list[winid]==null){
-        var fromto = jQuery(this).attr("arg1");
-        var words=extract_allwords(fromto);
-        console.log(words);
-        var ptwin =new WordCard_Win();
-        ptwin.createwin(winid,words[0],words[1]);
-        ptw_list[winid]=ptwin;
-    }
-    ptw_list[winid].show();
+
+    var params = PTwindow.Extract_ptparams(jQuery(this));
+    var ptwin=PTwindow.Factory(WordCard_Win, params);
+
+    ptwin.show();
 
 }
 
@@ -1050,7 +1128,7 @@ function XXtest_Win(top,left,width,height){
     ];
     MulEditwindow.call(this,"pt_test_win",rt_win,top,left,width,height);
 }
-XXtest_Win.prototype=new MulEditwindow();
+XXtest_Win.prototype=Object.create(MulEditwindow.prototype) ;
 
 
 XXtest_Win.prototype.createwin=function(winid) {
@@ -1085,6 +1163,7 @@ function Make_XXtest_Win(){
     ptw_list[winid].getwin().draggable();
     console.log("ptw_list[winid].draggable()");
 }
+
 
 // ----------- list windows --------------
 
@@ -1157,14 +1236,10 @@ function handle_list(mdata){
     outwin.find(".show_learnlist").click(show_learnlist);
 }
 
-function Listwindow(ptsubclass,pttop,ptleft,ptwidth,ptheight){
-    PTwindow.call(this,ptsubclass,pttop,ptleft,ptwidth,ptheight);
-}
-Listwindow.prototype=new PTwindow();
+function Listwindow(param_obj){
+    PTwindow.call(this,param_obj);
 
-Listwindow.prototype.createwin=function(winid){
-
-    PTwindow.prototype.createwin.call(this,winid);
+    var winid=param_obj.winid;
     var learnlist=jQuery( '<div class="learnlist"> </div>');
 
 //    var learndir = jQuery('<input type="text" name="learndir">');
@@ -1191,12 +1266,12 @@ Listwindow.prototype.createwin=function(winid){
     mdata['target']="learnlist";
     mdata['reflect']=winid;
     jQuery.ajax({url:url,data:mdata,success:handle_list,dataType:"jsonp",crossDomain:true});
-};
-
+}
+Listwindow.prototype=Object.create( PTwindow.prototype);
 
 
 function addfilter_aj(mdata){
-    var ptwin =ptw_list[mdata.reflect];
+    var ptwin =PTwindow.GetObj[mdata.reflect];
     var word_list_txt =mdata.content;
     var filter_sel = jQuery('<select name="filter_sel"><option value="none">none</option></select>');
     if(word_list_txt.length>5){
@@ -1221,7 +1296,7 @@ Listwindow.prototype.addfilter=function(){
 var USER_WORDLIST_NAME ;
 
 function add_userfilter_aj(mdata){
-    var ptwin =ptw_list[mdata.reflect];
+    var ptwin =PTwindow.GetObj[mdata.reflect];
     var user_list_txt =mdata.content;
     var user_filter_sel = jQuery('<select name="user_filter_sel"><option value="none">none</option></select>');
     if(user_list_txt.length>5){
@@ -1288,7 +1363,7 @@ Listwindow.prototype.getselect_learn = function(){
 
 
 function parse_learn_aj(mdata){
-    var ptwin =ptw_list[mdata.reflect];
+    var ptwin =PTwindow.GetObj[mdata.reflect];
     var pg_wordlist = mdata.content.toLowerCase().split(/[^\w\-_]+/);
     pg_wordlist.sort();
     if(ptwin.parse_count<2){
@@ -1340,14 +1415,14 @@ function parse_learn(event){
         return;
     }else{
         var buttonid= jQuery(this).attr("id");
-        if(ptw_list[buttonid]==null){
+        if(PTwindow.GetObj[buttonid]==null){
             var swin =new PTwindow("ptparse","2%","2%","90%","80%");
-            ptw_list[buttonid]=swin;
+            PTwindow.GetObj[buttonid]=swin;
             swin.createwin(buttonid);
-            ptwin.parse_output = ptw_list[buttonid].getclientwin();
+            ptwin.parse_output = PTwindow.GetObj[buttonid].getclientwin();
         }
         ptwin.parse_output.html("receiving learn data ...");
-        ptw_list[buttonid].show();
+        PTwindow.GetObj[buttonid].show();
         var mdata=new Object();
         mdata['pageid']=parse_learn_list[ptwin.parse_count];
         mdata['call']="ajaxpeon";
@@ -1361,16 +1436,14 @@ function parse_learn(event){
 }
 
 function parse_learn_win(){
+
     var winid = jQuery(this).attr("id");
-    if(ptw_list[winid]==null){
-        var top = jQuery(this).attr("arg1");
-        var left = jQuery(this).attr("arg2");
-        var width = jQuery(this).attr("arg3");
-        var height = jQuery(this).attr("arg4");
-        var ptwin =new Listwindow("parse_learn",top,left,width,height);
-        //    var ptwin = new Listwindow("iamcc1","100","600","300","400");
-        ptwin.createwin(winid);
-        ptw_list[winid]=ptwin;
+    var ptwin=PTwindow.GetObj(winid);
+    if(!ptwin){
+        var params = PTwindow.Extract_ptparams(jQuery(this));
+        params.subclass="parse_learn";
+        ptwin=PTwindow.Factory(Listwindow,params);
+
         var logic_sel = jQuery('<select name="logic_sel"><option value="wIntersection_w">Intersection</option><option value="wComplement_w">Complement</option>\
     <option value="wUnion_w">Union</option></select>');
 
@@ -1381,12 +1454,13 @@ function parse_learn_win(){
         ptwin.getclientwin().append(logic_sel);
         ptwin.getclientwin().append(parse_bt);
     }
-    ptw_list[winid].show();
+    ptwin.show();
+
 }
 
 
 function search_learn_aj(mdata){
-    var ptwin =ptw_list[mdata.reflect];
+    var ptwin =PTwindow.GetObj[mdata.reflect];
     var page_wordlists = mdata.content;
     var mystr="";
     var filter = ptwin.user_filter;
@@ -1416,14 +1490,14 @@ function search_learn(event){
     var parse_fuc = ptwin.getclientwin().find('select[name="logic_sel"]').val();
     if(sl_learn_list.length>0){
         var buttonid= jQuery(this).attr("id");
-        if(ptw_list[buttonid]==null){
-            var swin =new PTwindow("ptsearch","2%","2%","90%","80%");
-            ptw_list[buttonid]=swin;
-            swin.createwin(buttonid);
-            ptwin.output = swin.getclientwin();
+        var swin=PTwindow.GetObj(buttonid);
+        if(!swin){
+            swin=PTwindow.Factory(PTwindow,{winid:buttonid,subclass:"ptsearch",top:"2%",left:"2%",width:"90%",height:"80%"});
+            ptwin.output=swin.getclientwin();
         }
+
         ptwin.output.html("receiving learn data ...");
-        ptw_list[buttonid].show();
+        swin.show();
 
         var mdata=new Object();
         mdata['call']="ajaxpeon";
@@ -1437,14 +1511,11 @@ function search_learn(event){
 
 function search_learn_win(){
     var winid = jQuery(this).attr("id");
-    if(ptw_list[winid]==null){
-        var top = jQuery(this).attr("arg1");
-        var left = jQuery(this).attr("arg2");
-        var width = jQuery(this).attr("arg3");
-        var height = jQuery(this).attr("arg4");
-        var ptwin =new Listwindow("search_learn",top,left,width,height);
-        ptwin.createwin(winid);
-        ptw_list[winid]=ptwin;
+    var ptwin=PTwindow.GetObj(winid);
+    if(!ptwin){
+        var params = PTwindow.Extract_ptparams(jQuery(this));
+        params.subclass="search_learn";
+        ptwin=PTwindow.Factory(Listwindow,params);
 
         var search_bt = jQuery('<input name="search_bt" id="search_{0}" class="button" type="button" value="Search">'.format(winid));
         search_bt.click({"ptwin":ptwin},search_learn);
@@ -1452,12 +1523,16 @@ function search_learn_win(){
         ptwin.adduser_filter();
         ptwin.getclientwin().append(search_bt);
     }
-    ptw_list[winid].show();
+
+    ptwin.show();
 }
 
+// <<<<<<<<<<--------------------open_page ---------
+
 function open_page_worker(data){
+    console.dir(data);
     var buttonid = data.reflect;
-    var ptwin =ptw_list[buttonid];
+    var ptwin =PTwindow.GetObj(buttonid);
 
     ptwin.show();
     if (data.content.length<3){ptwin.getclientwin().html("Missing word . . .");
@@ -1468,32 +1543,25 @@ function open_page_worker(data){
 
 function open_page_win(){
 
-//    var pageid = jQuery(this).attr("pageid");
-    var pageid = jQuery(this).attr("arg1");
-    if(pageid==null){
+    var params= PTwindow.Extract_ptparams(jQuery(this));
+    console.dir(params);
+    if(params.pageid==null){
         return;
     }
 
-
-    var buttonid= jQuery(this).attr("id");
-    if(ptw_list[buttonid]==null){
-        var top = jQuery(this).attr("arg2");
-        var left = jQuery(this).attr("arg3");
-        var width = jQuery(this).attr("arg4");
-        var height = jQuery(this).attr("arg5");
-
-        var swin =new PTwindow("ptopen",top,left,width,height);
-        ptw_list[buttonid]=swin;
-        swin.createwin(buttonid);
+    var ptwin=PTwindow.GetObj(params.winid);
+    if(!ptwin){
+        params.subclass="ptopen";
+        ptwin=PTwindow.Factory(PTwindow,params);
     }
 
 
     var mdata=new Object();
-    mdata['pageid']=pageid;
+    mdata['pageid']=params.pageid;
     mdata['call']="ajaxpeon";
     var url = DOKU_BASE + 'lib/exe/ajax.php';
     mdata['target']="page";
-    mdata['reflect']=buttonid;
+    mdata['reflect']=params.winid;
     jQuery.ajax({url:url,data:mdata,success:open_page_worker,dataType:"jsonp",crossDomain:true});
 }
 
@@ -1646,6 +1714,14 @@ function Two_edit_win(){
     }
     ptw_list[buttonid].show();
 }
+// <<<<<<<<<<<<---------------just wrap div- ------------------------
+// <<<<<<<<<<<<---------------just wrap div- ----------------------
+// <<<<<<<<<<<<---------------just wrap div- ----------------------
+
+
+
+// ===================================
+
 // <<<<<<<<<<<<---------------translation- block------------------------
 // <<<<<<<<<<<<---------------translation- block-----------------------
 // <<<<<<<<<<<<---------------translation- block-----------------------
@@ -1768,7 +1844,7 @@ function xxbk_cp_sidebar(element){
 function XXBK_open(element){
     XXBK_base_ui.call(this,"xxbk_open");
 }
-XXBK_open.prototype=new XXBK_base_ui();
+XXBK_open.prototype=Object.create( XXBK_base_ui.prototype);
 XXBK_open.prototype.init_ct_div=function(ct_div_j){
     XXBK_base_ui.prototype.init_ct_div(ct_div_j);
     ct_div_j.html(ct_div_j.html()+" <br/> i am XXBK_open");
@@ -1811,6 +1887,32 @@ function syntax_BK_init(context) {
     });
 }
 
+//<<<<<<<<<<<<<<<<<<<< ------ things execute in php!!----------
+function init_pagetools(){
+    var jwin=jQuery(".pt_pa_sub");
+    jwin.appendTo("body");
+    var theul=jwin.find("ul").eq(0);
+    theul.find("li").each(function(){
+        var subdiv=jQuery(this).children("div");
+        var subhm =subdiv.html();
+        subdiv.remove();
+        jQuery(this).html(subhm+jQuery(this).html());
+    });
+    theul.menu();
+    var anck = jQuery(".pt_pagetools");
+    var oset= anck.offset();
+    oset.left+=anck.offsetParent().width()+10;
+    jwin.offset(oset);
+
+
+    jQuery(".pt_pagetools").click(function(event){
+        event.preventDefault();
+        event.stopPropagation();
+        jQuery(".pt_pa_sub").toggle();
+        jQuery(this).blur();
+    });
+}
+
 
 
 function init_ui(context){
@@ -1826,8 +1928,12 @@ function init_ui(context){
     WORDLIST_NAME=JSINFO['wordlist_ns']+"wordlist";
 
     console.log(parent+" .xxpg_learn");
+    ptlog=new PTlog();
+
+    init_pagetools();
     syntax_BK_init(context);
     pg_show_wordlist(context);
+    Init_english_edit_tool();
     jQuery(" .xxpg_learn",context).click(search_learn_win);
     jQuery(" .xxpg_parse",context).click(parse_learn_win);
     jQuery(" .xxpg_open",context).click(open_page_win);
@@ -1836,12 +1942,12 @@ function init_ui(context){
     jQuery(" .xxpg_checkwords",context).click(Make_Checkwords_Win);
     jQuery(" .xxpg_test",context).click(Make_XXtest_Win);
     jQuery(" .xxpg_card",context).click(Make_wordcard_win);
+    ptlog.log("hello");
 
 }
 
 jQuery(function(){
 
     // jQuery methods go here...
-    xxedit_learn_add();
     init_ui();
 });
