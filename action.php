@@ -28,6 +28,7 @@ class  action_plugin_pagestat extends DokuWiki_Action_Plugin
         $JSINFO['subtitle_dst']=$this->getConf('subtitle_dst');
         $JSINFO['stable_dst']=$this->getConf('stable_dst');
         $JSINFO['def_dst']=$this->getConf('def_dst');
+        $JSINFO['wordlist_dst']=$this->getConf('wordlist_dst');
     }
 
     function add_rpc_all(&$event, $param){

@@ -9,3 +9,4 @@ $meta['user_wordlists']      = array('string'); // minutes
 $meta['subtitle_dst'] =array('string');
 $meta['stable_dst'] =array('string');
 $meta['def_dst'] =array('string');
+$meta['wordlist_dst'] =array('string');

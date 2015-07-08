@@ -10,3 +10,4 @@ $conf['user_wordlists']    =  'wordlist';
 $conf['subtitle_dst'] ='subtitle';
 $conf['stable_dst'] ='stable';
 $conf['def_dst'] ='def';
+$conf['wordlist_dst'] ='wordlist';
