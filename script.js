@@ -860,19 +860,18 @@ Analyze_Win.prototype.make_newwords=function(in_jqwin,out_jqwin){
     var out_str="====== Movie Inf ======\n";
     out_str+="\nLike genre,stars,director and more,please editor me\n";
     out_str+="====== wordlist ======\n";
-    out_str+="<WORDLIST>";
-    out_str+=newwords.join(",");
-    out_str+="</WORDLIST>";
+    out_str+="The wordlist location [[{0}]]\n".format(wordlist_id);
+    out_str+="<BK open page={0}>Show wordlist of this page</BK>\n".format(wordlist_id);
     out_str+="\n===== slice =====\n";
     out_str+="\n====== Notice ======\n";
     out_str+="\n some hard grammar or sentence in movie,please editor me\n";
     out_str+="\n====== Words Meaning ======\n";
-    out_str+="The words meaning location [[{0}]]".format(wordmean_id);
-    out_str+="<BK open {0}>Show All New Word Meaning</BK>\n".format(wordmean_id);
+    out_str+="The words meaning location [[{0}]]\n".format(wordmean_id);
+    out_str+="<BK open page={0}>Show All New Word Meaning</BK>\n".format(wordmean_id);
 
     out_str+="\n====== Subtitle ======\n";
     out_str+="The srt file location [[{0}]]\\\\ \n".format(subtitle_id);
-    out_str+="<BK open {0}>Show {1}.srt </BK>\n".format(subtitle_id,subt_name);
+    out_str+="<BK open page={0}>Show {1}.srt </BK>\n".format(subtitle_id,subt_name);
 
 
     out_jqwin.val(out_str);
@@ -1730,103 +1729,131 @@ function Two_edit_win(){
 
 
 //<<<<<<<<<<<<<<---------------------xxbk_base-------------------------
-function XXBK_base_ui(subclass){
-    this.subclass=subclass;
-}
-XXBK_base_ui.xxbk_list=[];
-XXBK_base_ui.add_xxbk=function(xxbk){
+// BK is inplace ui ,show content inplace
+// {subclass:"",dom_me:""}
+function XXBK_base_ui(params_obj){
 
-    XXBK_base_ui.xxbk_list.push(xxbk);
-    var xxid=XXBK_base_ui.xxbk_list.length-1;
-    return xxid;
-};
-XXBK_base_ui.get_xxbk=function(xxid){
-    var id =parseInt(xxid);
-    return XXBK_base_ui.xxbk_list[id];
-};
-XXBK_base_ui.prototype.create_ui=function(parent){
-    console.log("before . XXBK_base_ui.create_ui");
-    if(jQuery(parent).attr("init")!="n"){
-        return;
+    this.subclass=params_obj.subclass;
+    this.jdom_me=jQuery(params_obj.dom_me);
+    this.create_ui(params_obj);
+}
+
+XXBK_base_ui.Extract_bkparams=function(jwin){
+
+    var arg_txt=jwin.attr("xx_arg");
+    var arg_list=arg_txt.split(";");
+    var out_params={};
+    for(var i=0;i<arg_list.length;i++){
+        var sub_arg=arg_list[i].split("=");
+        if(sub_arg.length>=2){
+            out_params[sub_arg[0].trim()]=sub_arg[1];
+        }else{
+            out_params["BAD"]=arg_list[i];
+        }
     }
-    console.log("after . XXBK_base_ui.create_ui");
-    jQuery(parent).attr("init","y");
-    var xxid = XXBK_base_ui.add_xxbk(this);
-    var parent_txt=jQuery(parent).html();
-    var base_ui_txt='<span class="xxbk_base_title {0}" id="tt_{0}{1}" xxid="{1}">{2}</span> \
-    <div class="xxbk_base_ct {0}" style="display: none" init="n"></div>\
-    '.format(this.subclass,xxid,parent_txt);
+    out_params.command=jwin.attr("command");
+    return out_params;
+};
+
+XXBK_base_ui.xxbk_list={};
+//{dom_me:""}
+XXBK_base_ui.Factory_byMe=function(ui_type,params_obj){
+    var j_me = jQuery(params_obj.dom_me);
+    var winid=j_me.attr("id");
+    if(j_me.attr("init")!="n"){
+        return XXBK_base_ui.xxbk_list[winid];
+    }
+
+    j_me.attr("init","y");
+    if(!XXBK_base_ui.GetObj(winid)){
+        var params = XXBK_base_ui.Extract_bkparams(j_me);
+        console.dir(params);
+        params.dom_me=params_obj.dom_me;
+        XXBK_base_ui.xxbk_list[winid]=new ui_type(params);
+    }
+    return XXBK_base_ui.xxbk_list[winid];
+};
+XXBK_base_ui.GetObj=function(winid){
+    return XXBK_base_ui.xxbk_list[winid];
+};
+
+// javascript can use
+XXBK_base_ui.prototype.create_ui=function(params_obj){
+    var jdom_me=this.jdom_me;
+    var winid=jdom_me.attr("id");
+    var ori_txt = jdom_me.html();
+
+    var base_ui_txt='<span class="xxbk_base_title xxbk_tt_{0}" id="tt_{1}" >{2}</span> \
+    <div class="xxbk_base_ct xxbk_ct_{0}" style="display: none" init="n"></div>\
+    '.format(params_obj.command,winid,ori_txt);
     this.base_ui=jQuery(base_ui_txt);
-    jQuery(parent).html("");
-    jQuery(parent).append(this.base_ui);
-    this.parant_j=jQuery(parent);
+
+    jdom_me.html("");
+    jdom_me.append(this.base_ui);
+
     var call_ob=this;
-    this.parant_j.find("span.xxbk_base_title").click(function(){
+    this.jdom_me.find("span.xxbk_base_title").click(function(){
         console.log("span.xxbk_base_title click");
-        var ct_div=call_ob.parant_j.find("div.xxbk_base_ct");
+        var ct_div=call_ob.jdom_me.find("div.xxbk_base_ct");
         if(ct_div.length==0){
-            call_ob.parant_j.html("xxbk_base_ui was broken!please check the page!");
+            call_ob.jdom_me.html("xxbk_base_ui was broken!please check the page!");
             return;
         }
         if(ct_div.attr("init")=='n') {
-            call_ob.init_ct_div(ct_div);
+            call_ob.init_ct_div(ct_div,params_obj);
             ct_div.attr("init",'y');
         }
         ct_div.toggle();
     });
 
-
 };
+
 XXBK_base_ui.prototype.init_ct_div=function(ct_div_j){
     ct_div_j.html("how are you");
 };
 
+XXBK_base_ui.prototype.getTitle=function(){
+  return this.jdom_me.find(".xxbk_base_title").eq(0);
+};
+
+XXBK_base_ui.prototype.getCTdiv=function(){
+    return this.jdom_me.find(".xxbk_base_ct").eq(0);
+};
+
+
 
 // <<<<<<<<<<<<---------------syntax- block------------------------
 // <<<<<<<<<<<<---------------syntax- block------------------------
 // <<<<<<<<<<<<---------------syntax- block------------------------
 // <<<<<<<<<<<<---------------syntax- block------------------------
-function xxbk_slice(element){
-    var s_word_arr = extract_allwords( jQuery(element).attr("arg1"));
-    if(s_word_arr.length>1){
-        var s_from=s_word_arr[0];
-        var s_to = s_word_arr[1];
-        var add_txt = '<span class="xxbk_slice_words" s_from="{0}" s_to="{1}" onclick="xxbk_slice_click(this)">{0} -> {1} </span>\
-        <span class="xxbk_slice_inf">{2}</span>\
-        <div class="xxbk_slice_result" style="display: none" init="n" ></div>\
-             '.format(s_from,s_to,jQuery(element).html());
-        jQuery(element).html(add_txt);
-    }
+
+
+function XXBK_slice(params_obj){
+    XXBK_base_ui.call(this,params_obj);
+    var jtitle=this.getTitle();
+    var newtt = "{0} ~ {1} | {2}".format(params_obj.from,params_obj.to,jtitle.html());
+    jtitle.html(newtt);
 }
-function xxbk_slice_click(element){
-
+XXBK_slice.prototype=Object.create( XXBK_base_ui.prototype);
+XXBK_slice.prototype.init_ct_div= function(ct_div_j,params_obj){
     var jq_wordlist=jQuery(".wordlist");
-    var rt_div=jQuery(element).siblings(".xxbk_slice_result");
-    if(rt_div.length==0){
-        jQuery(element).html("the slice was broken!please check the page!");
-        return
-    }
-    if(rt_div.attr("init")=='n'){
-        if(jq_wordlist.length>0) {
-            var wd_txt = jq_wordlist.text();
+    if(jq_wordlist.length>0) {
+        var wd_txt = jq_wordlist.text();
+        var s_from = params_obj.from;
+        var s_to = params_obj.to;
+        var tmp="\\b{0}\\b.+\\b{1}\\b".format(s_from, s_to);
 
-            var s_from = jQuery(element).attr("s_from");
-            var s_to = jQuery(element).attr("s_to");
-            var tmp="\\b{0}\\b.+\\b{1}\\b".format(s_from, s_to);
-//            var tmp="\b"+s_from+"\b.+\b"+s_to+"\b";
-
-            var reg_sr = new RegExp(tmp);
-            var rt = wd_txt.match(reg_sr);
-            if (rt) {
-                rt_div.html(rt[0]);
-            }else{
-                rt_div.html("!!! Maybe The slice words was deleted from the wordlist,please choose another word to slice");
-            }
+        var reg_sr = new RegExp(tmp);
+        var rt = wd_txt.match(reg_sr);
+        if (rt) {
+            ct_div_j.html(rt[0]);
+        }else{
+            ct_div_j.html("!!! Maybe The slice words was deleted from the wordlist,please choose another word to slice");
         }
-        rt_div.attr("init",'y');
     }
-    rt_div.toggle();
-}
+};
+
+
 
 // <<<<<<<<<<<<<<-----------------cp sidebar -------------------
 function xxbk_cp_sidebar(element){
@@ -1841,15 +1868,15 @@ function xxbk_cp_sidebar(element){
 
 //<<<<<<<<<<<<<<<<<<<-----------xxbk_open------------------------
 
-function XXBK_open(element){
-    XXBK_base_ui.call(this,"xxbk_open");
+function XXBK_open(params_obj){
+    XXBK_base_ui.call(this,params_obj);
 }
 XXBK_open.prototype=Object.create( XXBK_base_ui.prototype);
-XXBK_open.prototype.init_ct_div=function(ct_div_j){
-    XXBK_base_ui.prototype.init_ct_div(ct_div_j);
+XXBK_open.prototype.init_ct_div=function(ct_div_j,params_obj){
+    XXBK_base_ui.prototype.init_ct_div.call(this,ct_div_j);
     ct_div_j.html(ct_div_j.html()+" <br/> i am XXBK_open");
 
-    var pageid=this.parant_j.attr("arg1");
+    var pageid=params_obj.page;
     var call_ob=this;
 
     ajax_xcall("wiki.getPageHTML",[pageid],function(data){
@@ -1867,20 +1894,20 @@ function syntax_BK_init(context) {
     var sel_txt = parent+".xxbk";
     jQuery(".xxbk",context).each(function (index, element) {
     //element == this
-        var class_txt = jQuery(this).attr("class");
-        var ctype = class_txt.match(/\bxxbk_[\w]+\b/);
+    //    var class_txt = jQuery(this).attr("class");
+    //    var ctype = class_txt.match(/\bxxbk_[\w]+\b/);
+        var command = jQuery(this).attr("command");
 
-        if(ctype){
-            switch (ctype[0]){
-                case "xxbk_slice":
-                    xxbk_slice(element);
+        if(command){
+            switch (command){
+                case "slice":
+                    XXBK_base_ui.Factory_byMe(XXBK_slice,{dom_me:element});
                     break;
-                case "xxbk_sidebar":
-                    xxbk_cp_sidebar(element);
+                case "sidebar":
+                    XXBK_base_ui.Factory_byMe(xxbk_cp_sidebar,{dom_me:element});
                     break;
-                case "xxbk_open":
-                    var bk_open=new XXBK_open();
-                    bk_open.create_ui(element);
+                case "open":
+                    XXBK_base_ui.Factory_byMe(XXBK_open,{dom_me:element});
                     break;
             }
         }
