@@ -224,11 +224,11 @@ PTwindow.Factory_byElement=function(window_type,element) {
     var factory_win = jQuery(element);
     var winid=factory_win.attr("id");
     if(!PTwindow.GetObj(winid)){
-        PTwindow.ptw_list[winid]=new window_type(params_obj);
-    }else{
         var params = PTwindow.Extract_ptparams(factory_win);
-        return PTwindow.Factory(window_type,params);
+        PTwindow.Factory(window_type,params);
     }
+
+    return PTwindow.ptw_list[winid];
 };
 
 PTwindow.GetObj=function(winid){
