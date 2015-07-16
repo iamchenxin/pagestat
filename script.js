@@ -30,7 +30,7 @@ function wComplement_w(main_sortlist,filter_words){
         }
     }
 
-    var words_out_list=new Array();
+    var words_out_list=[];
     for (var x in main_map){
         words_out_list.push(x);
     }
@@ -56,8 +56,8 @@ function wIntersection_w(sortlistone,sortlisttwo){
 function wUnion_w(listone,listtwo){
     var list_all =listone.concat(listtwo);
     list_all.sort();
-    var out_list=make_unique_list(list_all);
-    return out_list;
+    return make_unique_list(list_all);
+
 }
 
 function make_unique_list(ordered_list){
@@ -212,7 +212,7 @@ PTwindow.Extract_ptparams=function(jwin){
         throw "the dom who open ptwindow must has a id!";
     }
     return out_params;
-}
+};
 PTwindow.ptw_list={};
 PTwindow.Factory=function(window_type,params_obj){
     var winid= params_obj.winid;
@@ -463,7 +463,7 @@ PTwindow_E.prototype.ajax_get_defs=function(words_arr,status,xcallback){
 
            var out_txt="";
 
-           for(var i=0;i<words_arr.length;i++){
+           for(i=0;i<words_arr.length;i++){
                var word_def=defs_map[words_arr[i]];
                if(word_def) {
                    out_txt += call_ob.generate_def_more(word_def);
