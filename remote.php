@@ -208,14 +208,14 @@ DEFSSIMP;
         $defen_txt = $word_def[3];
         $out_txt="";
         $out_txt.="===== $word =====\n";
-        $out_txt.="  * $word ($pron) \\\\ **$defsimp**\n";
+        $out_txt.="  * <wrap vo>$word</wrap> ($pron) \\\\ **$defsimp**\n";
         if($defen_txt){
             $defen=json_decode($defen_txt,TRUE);
 
             foreach($defen as $pos=>$subdefs){
                 $out_txt.="    - $pos\n";
                 foreach($subdefs as $index=>$subd){
-                    $out_txt.="      - $''{$subd['mean']}''\\\\ {$subd['sen']}\n";
+                    $out_txt.="      - ''{$subd['mean']}''\\\\ {$subd['sen']}\n";
                 }
             }
         }

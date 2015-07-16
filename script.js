@@ -191,16 +191,20 @@ PTwindow.MakeDimen=function(param_obj){
 PTwindow.Extract_ptparams=function(jwin){
 
     var arg_txt=jwin.attr("pt_arg");
-    var arg_list=arg_txt.split(";");
     var out_params={};
-    for(var i=0;i<arg_list.length;i++){
-        var sub_arg=arg_list[i].split("=");
-        if(sub_arg.length>=2){
-            out_params[sub_arg[0].trim()]=sub_arg[1];
-        }else{
-            out_params["BAD"]=arg_list[i];
+    if(arg_txt){
+        var arg_list=arg_txt.split(";");
+
+        for(var i=0;i<arg_list.length;i++){
+            var sub_arg=arg_list[i].split("=");
+            if(sub_arg.length>=2){
+                out_params[sub_arg[0].trim()]=sub_arg[1];
+            }else{
+                out_params["BAD"]=arg_list[i];
+            }
         }
     }
+
     var winid=jwin.attr("id");
     if(winid){
         out_params.winid=winid;
@@ -867,7 +871,7 @@ Analyze_Win.prototype.make_newwords=function(in_jqwin,out_jqwin){
     out_str+="\n some hard grammar or sentence in movie,please editor me\n";
     out_str+="\n====== Words Meaning ======\n";
     out_str+="The words meaning location [[{0}]]\n".format(wordmean_id);
-    out_str+="<BK open page={0}>Show All New Word Meaning</BK>\n".format(wordmean_id);
+    out_str+="<BK open page={0} type=def>Show All New Word Meaning</BK>\n".format(wordmean_id);
 
     out_str+="\n====== Subtitle ======\n";
     out_str+="The srt file location [[{0}]]\\\\ \n".format(subtitle_id);
@@ -1021,20 +1025,21 @@ function WordCard_Win(param_obj){
     var w_from=param_obj.from;
     var w_to=param_obj.to;
 
+
     var ctwin=this.getclientwin();
     var call_ob=this;
     call_ob.heightlight(".wc_next");
     this.build_card(w_from,w_to);
-
+    call_ob.card_itor(0);
     ctwin.find(".wc_pre").click(function(){
-        call_ob.card_itor(-1);
-        ctwin.find(".wc_inf").html("<----previous");
 
+        call_ob.card_itor(-1);
+        ctwin.find(".wc_inf").html("<----previous ({0}/{1})".format(call_ob.card_index+1,call_ob.word_cards.length));
     });
 
     ctwin.find(".wc_next").click(function(){
         call_ob.card_itor(1);
-        ctwin.find(".wc_inf").html("next ----> ");
+        ctwin.find(".wc_inf").html("next ----> ({0}/{1})".format(call_ob.card_index+1,call_ob.word_cards.length));
     });
 
 }
@@ -1071,17 +1076,19 @@ WordCard_Win.prototype.build_card=function(w_from,w_to){
         }
     }
 
+    console.dir(word_list);
+
     var word_map={};
     for(var i=0;i<word_list.length;i++){
         word_map[word_list[i]]=i;
     }
 
     var word_cards_tmp=[];
-    var tran_list=jQuery(".xxbk_open ol li");
+    var tran_list=jQuery(".xxbk_open ul li");
 
     tran_list.each(function(index){
         var word=jQuery("div span.wrap_vo",this).text();
-        if(word&&word_map[word]) {
+        if(word&&(word in word_map)) {
             word_cards_tmp[word_map[word]] = jQuery(this).html();
         }
     });
@@ -1090,6 +1097,7 @@ WordCard_Win.prototype.build_card=function(w_from,w_to){
         word_cards.push(word_cards_tmp[key]);
     }
 
+
     console.dir(word_cards);
     this.word_cards=word_cards;
     this.card_index=0;
@@ -1097,22 +1105,27 @@ WordCard_Win.prototype.build_card=function(w_from,w_to){
 WordCard_Win.prototype.card_itor=function(step){
     var ctwin=this.getclientwin();
     this.card_index+=step;
-    if(this.card_index<0){this.card_index=0;}
-    if(this.card_index>=this.word_cards.length){this.card_index=this.word_cards.length-1;}
+    if(this.card_index<0){this.card_index=this.word_cards.length-1;}
+    if(this.card_index>=this.word_cards.length){this.card_index=0;}
     var word_c= this.word_cards[this.card_index];
     var div_wrap='<div class="wc_wordcard_wp">{0}</div>'.format(word_c);
     ctwin.find(".wc_wordcard").html(div_wrap);
     mxyd_voice_onclick(".wrap_vo",ctwin[0]);
     ctwin.find(".wrap_vo").click();
+
     return word_c;
 };
 
 function Make_wordcard_win(){
 
-    var params = PTwindow.Extract_ptparams(jQuery(this));
-    var ptwin=PTwindow.Factory(WordCard_Win, params);
-
-    ptwin.show();
+    var jq_xxbk_wl=jQuery(".xxbk_type_wordlist");
+    var jq_xxbk_def=jQuery(".xxbk_type_def");
+    var call_ob=this;
+    XXBK_base_ui.prototype.click_delay.call(this,[jq_xxbk_wl,jq_xxbk_def],function(){
+        var params = PTwindow.Extract_ptparams(jQuery(call_ob));
+        var ptwin=PTwindow.Factory(WordCard_Win, params);
+        ptwin.show();
+    });
 
 }
 
