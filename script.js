@@ -1076,7 +1076,7 @@ WordCard_Win.prototype.build_card=function(w_from,w_to){
         }
     }
 
-    console.dir(word_list);
+
 
     var word_map={};
     for(var i=0;i<word_list.length;i++){
@@ -1098,7 +1098,7 @@ WordCard_Win.prototype.build_card=function(w_from,w_to){
     }
 
 
-    console.dir(word_cards);
+
     this.word_cards=word_cards;
     this.card_index=0;
 };
@@ -1153,8 +1153,7 @@ XXtest_Win.prototype.createwin=function(winid) {
         var wordtxt =ctwin.find(".ck_test_input").val();
         var word_arr = extract_allwords(wordtxt);
         call_ob.ajax_get_defs(word_arr,"MORE",function(def_txt){
-            console.log(def_txt);
-            console.dir(ctwin);
+
             ctwin.find(".ck_test_out").val(def_txt);
         });
     });
@@ -1173,7 +1172,7 @@ function Make_XXtest_Win(){
     }
     ptw_list[winid].show();
     ptw_list[winid].getwin().draggable();
-    console.log("ptw_list[winid].draggable()");
+
 }
 
 
@@ -1542,7 +1541,7 @@ function search_learn_win(){
 // <<<<<<<<<<--------------------open_page ---------
 
 function open_page_worker(data){
-    console.dir(data);
+
     var buttonid = data.reflect;
     var ptwin =PTwindow.GetObj(buttonid);
 
@@ -1556,7 +1555,7 @@ function open_page_worker(data){
 function open_page_win(){
 
     var params= PTwindow.Extract_ptparams(jQuery(this));
-    console.dir(params);
+
     if(params.pageid==null){
         return;
     }
@@ -1780,7 +1779,7 @@ XXBK_base_ui.Factory_byMe=function(ui_type,params_obj){
     j_me.attr("init","y");
     if(!XXBK_base_ui.GetObj(winid)){
         var params = XXBK_base_ui.Extract_bkparams(j_me);
-        console.dir(params);
+
         params.dom_me=params_obj.dom_me;
         XXBK_base_ui.xxbk_list[winid]=new ui_type(params);
     }
@@ -1807,7 +1806,7 @@ XXBK_base_ui.prototype.create_ui=function(params_obj){
 
     var call_ob=this;
     this.jdom_me.find("span.xxbk_base_title").click(function(){
-        console.log("span.xxbk_base_title click");
+
         var ct_div=call_ob.jdom_me.find("div.xxbk_base_ct");
         if(ct_div.length==0){
             call_ob.jdom_me.html("xxbk_base_ui was broken!please check the page!");
@@ -2056,7 +2055,7 @@ function init_ui(context){
     USER_WORDLIST_NAME = 'user:'+JSINFO['user']+":wordlist";
     WORDLIST_NAME=JSINFO['wordlist_ns']+"wordlist";
 
-    console.log(parent+" .xxpg_learn");
+
     ptlog=new PTlog();
 
     init_pagetools();
