@@ -1814,7 +1814,7 @@ XXBK_base_ui.prototype.create_ui=function(params_obj){
         }
         if(ct_div.attr("init")=='n') {
             call_ob.init_ct_div(ct_div,params_obj);
-            ct_div.attr("init",'y');
+
         }
         ct_div.toggle();
     });
@@ -1840,6 +1840,7 @@ XXBK_base_ui.prototype.click_delay=function(xx_jq_list,call_back){
         console.log("during timer");
         return;
     }
+    console.log("click_delay");
 
     // chick all object in jq_list ,and if they are all inited ,just  call_back and return
     var init_all=true;
@@ -1847,7 +1848,7 @@ XXBK_base_ui.prototype.click_delay=function(xx_jq_list,call_back){
         var jq_content=xx_jq_list[i].find("div.xxbk_base_ct");
         var jq_title=xx_jq_list[i].find(".xxbk_base_title");
 
-        if(jq_content.attr("init")=="n"){
+        if(jq_content.attr("init")!="y"){
             if(jq_title){
                 jq_title.click();
             }
@@ -1864,10 +1865,13 @@ XXBK_base_ui.prototype.click_delay=function(xx_jq_list,call_back){
         var init = true;
         for(var i=0;i<xx_jq_list.length;i++){
             var jq_content=xx_jq_list[i].find("div.xxbk_base_ct");
-            if(jq_content.attr("init")=="n"){
+            if(jq_content.attr("init")!="y"){
                 init=false;
+                console.log("iam check init {0}".format(jq_content.attr("init")))
             }
+
         }
+        console.log("iam waiting")
 
         if(init==true){
             call_back();
@@ -1944,7 +1948,7 @@ XXBK_newTpl.prototype.init_ct_div=function(ct_div_j,params_obj) {
                 ct_div_j.html(data.error.data);
             }
         }
-
+        ct_div_j.attr("init",'y');
     });
 };
 
@@ -1986,6 +1990,7 @@ XXBK_open.prototype.init_ct_div=function(ct_div_j,params_obj){
                 init_mxyd_voice(".wrap_vo","y");
                 break;
         }
+        ct_div_j.attr("init",'y');
     });
 };
 //<<<<<<<<<<<<<<<<<<<<<<
