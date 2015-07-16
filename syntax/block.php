@@ -55,11 +55,18 @@ class syntax_plugin_pagestat_block extends DokuWiki_Syntax_Plugin {
                     }
                     $subname=$arg_list[0];
                     $arg_count=1;
+                    $type_class="";
+                    for($i=1;$i<$length;$i++){
+                        $tmp_arg=explode("=",$arg_list[$i]);
+                        if($tmp_arg[0]=="type"){
+                            $type_class="xxbk_type_$tmp_arg[1]";
+                        }
+                    }
                     $xx_arg=implode(";",array_slice($arg_list,1));
 //            $str =  '<div class="xxpg xxpg_'.$match.'" id="xxpg_'.$match+$count.'"></div>';
 
                     $str2 =<<<STRRR
-<div class="xxbk xxbk_$subname" id="xxbk_$subname$count" command="$subname" xx_arg="$xx_arg" arg_count="$length" init="n"
+<div class="xxbk xxbk_$subname $type_class" id="xxbk_$subname$count" command="$subname" xx_arg="$xx_arg" arg_count="$length" init="n"
 STRRR;
 
                     $renderer->doc .= $str2.' >';

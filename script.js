@@ -861,7 +861,7 @@ Analyze_Win.prototype.make_newwords=function(in_jqwin,out_jqwin){
     out_str+="\nLike genre,stars,director and more,please editor me\n";
     out_str+="====== wordlist ======\n";
     out_str+="The wordlist location [[{0}]]\n".format(wordlist_id);
-    out_str+="<BK open page={0}>Show wordlist of this page</BK>\n".format(wordlist_id);
+    out_str+="<BK open page={0} type=wordlist>Show wordlist of this page</BK>\n".format(wordlist_id);
     out_str+="\n===== slice =====\n";
     out_str+="\n====== Notice ======\n";
     out_str+="\n some hard grammar or sentence in movie,please editor me\n";
@@ -1777,6 +1777,7 @@ XXBK_base_ui.GetObj=function(winid){
     return XXBK_base_ui.xxbk_list[winid];
 };
 
+
 // javascript can use
 XXBK_base_ui.prototype.create_ui=function(params_obj){
     var jdom_me=this.jdom_me;
@@ -1820,6 +1821,52 @@ XXBK_base_ui.prototype.getCTdiv=function(){
     return this.jdom_me.find(".xxbk_base_ct").eq(0);
 };
 
+XXBK_base_ui.prototype.click_delay=function(xx_jq_list,call_back){
+
+    var call_ob=this;
+    if(call_ob.wl_timer!=null){
+        console.log("during timer");
+        return;
+    }
+
+    // chick all object in jq_list ,and if they are all inited ,just  call_back and return
+    var init_all=true;
+    for(var i=0;i<xx_jq_list.length;i++){
+        var jq_content=xx_jq_list[i].find("div.xxbk_base_ct");
+        var jq_title=xx_jq_list[i].find(".xxbk_base_title");
+
+        if(jq_content.attr("init")=="n"){
+            if(jq_title){
+                jq_title.click();
+            }
+            init_all=false;
+        }
+    }
+    if(init_all==true){
+        call_back();
+        return;
+    }
+
+    // setInterval ,wait all ajax reday in jq_list
+    call_ob.wl_timer=window.setInterval(function(){
+        var init = true;
+        for(var i=0;i<xx_jq_list.length;i++){
+            var jq_content=xx_jq_list[i].find("div.xxbk_base_ct");
+            if(jq_content.attr("init")=="n"){
+                init=false;
+            }
+        }
+
+        if(init==true){
+            call_back();
+            window.clearInterval(call_ob.wl_timer);
+            call_ob.wl_timer=null;
+        }
+
+    },500);
+
+};
+
 
 
 // <<<<<<<<<<<<---------------syntax- block------------------------
@@ -1836,6 +1883,16 @@ function XXBK_slice(params_obj){
 }
 XXBK_slice.prototype=Object.create( XXBK_base_ui.prototype);
 XXBK_slice.prototype.init_ct_div= function(ct_div_j,params_obj){
+    var call_ob=this;
+    var jq_xxbk_wl=jQuery(".xxbk_type_wordlist");
+    this.click_delay([jq_xxbk_wl],function(){
+        call_ob.show_slice(ct_div_j,params_obj);
+    });
+};
+
+
+XXBK_slice.prototype.show_slice= function(ct_div_j,params_obj){
+
     var jq_wordlist=jQuery(".wordlist");
     if(jq_wordlist.length>0) {
         var wd_txt = jq_wordlist.text();
@@ -1855,16 +1912,30 @@ XXBK_slice.prototype.init_ct_div= function(ct_div_j,params_obj){
 
 
 
+
 // <<<<<<<<<<<<<<-----------------cp sidebar -------------------
-function xxbk_cp_sidebar(element){
-    jQuery(element).click(function(element){
-        ajax_xcall("tp.tpage",["sidebar"],function(data){
-           console.dir(data);
-            var dst_page=data.result;
-            window.location="/{0}?do=edit".format(dst_page);
-        });
-    });
+
+function XXBK_newTpl(params_obj){
+    XXBK_base_ui.call(this,params_obj);
 }
+XXBK_newTpl.prototype=Object.create( XXBK_base_ui.prototype);
+XXBK_newTpl.prototype.init_ct_div=function(ct_div_j,params_obj) {
+    var tpl=params_obj.template;
+    var call_ob=this;
+
+    ajax_xcall("tp.newtpl",[tpl],function(data){
+        var dst_page=data.result;
+        if(dst_page){
+            window.location="/{0}?do=edit".format(dst_page);
+        }else{
+            if(data.error){
+                ct_div_j.html(data.error.data);
+            }
+        }
+
+    });
+};
+
 
 //<<<<<<<<<<<<<<<<<<<-----------xxbk_open------------------------
 
@@ -1879,17 +1950,35 @@ XXBK_open.prototype.init_ct_div=function(ct_div_j,params_obj){
     var pageid=params_obj.page;
     var call_ob=this;
 
+    // some init for framework
+    switch (params_obj.type){
+        case "wordlist":
+            ct_div_j.addClass("wordlist");
+            this.jdom_me.addClass("xxbk_wordlist");
+            break;
+        default :
+            break;
+    }
+
     ajax_xcall("wiki.getPageHTML",[pageid],function(data){
+
         ct_div_j.html(data.result);
         var js_div=ct_div_j[0];
-     //   init_ui("#{0} ".format(call_ob.parant_j.attr("id")));
-        init_ui(js_div);
-        init_mxyd_voice(".wrap_vo","y");
+
+        // some init for content
+        switch (params_obj.type){
+            case "wordlist":
+                break;
+            default :
+                init_ui(js_div);
+                init_mxyd_voice(".wrap_vo","y");
+                break;
+        }
     });
 };
-
-
 //<<<<<<<<<<<<<<<<<<<<<<
+
+
 function syntax_BK_init(context) {
     var sel_txt = parent+".xxbk";
     jQuery(".xxbk",context).each(function (index, element) {
@@ -1903,8 +1992,8 @@ function syntax_BK_init(context) {
                 case "slice":
                     XXBK_base_ui.Factory_byMe(XXBK_slice,{dom_me:element});
                     break;
-                case "sidebar":
-                    XXBK_base_ui.Factory_byMe(xxbk_cp_sidebar,{dom_me:element});
+                case "newtpl":
+                    XXBK_base_ui.Factory_byMe(XXBK_newTpl,{dom_me:element});
                     break;
                 case "open":
                     XXBK_base_ui.Factory_byMe(XXBK_open,{dom_me:element});
