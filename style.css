@@ -236,6 +236,17 @@ div.xxbk_base_ct{
 #dokuwiki__pagetools ul li .ptools_main:active {
     background-image: url(pagetool2.png);
 }
+
+#dokuwiki__pagetools ul li .ptools_edit:before {
+    content: url(pagetool3.png);
+    margin-top: 0;
+}
+#dokuwiki__pagetools:hover ul li .ptools_edit,
+#dokuwiki__pagetools ul li .ptools_edit:focus,
+#dokuwiki__pagetools ul li .ptools_edit:active {
+    background-image: url(pagetool3.png);
+}
+
 #dokuwiki__pagetools ul li .ptools_main:hover,
 #dokuwiki__pagetools ul li .ptools_main:active,
 #dokuwiki__pagetools ul li .ptools_main:focus ,
@@ -245,15 +256,7 @@ div.xxbk_base_ct{
     background-position: right -45px;
 }
 
-#dokuwiki__pagetools ul li .ptools_edit:before {
-    content: url(ptback.png);
-    margin-top: 0;
-}
-div.pt_pa_sub:hover ul li .ptools_edit,
-#dokuwiki__pagetools ul li .ptools_edit:focus,
-#dokuwiki__pagetools ul li .ptools_edit:active {
-    background-image: url(ptback.png);
-}
+
 
 div.pt_pa_sub{
     position: fixed;
