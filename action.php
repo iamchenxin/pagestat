@@ -11,7 +11,7 @@ require_once (DOKU_INC.'inc/template.php');
 
 class  action_plugin_pagestat extends DokuWiki_Action_Plugin
 {
-    function register(&$controller)
+    function register(Doku_Event_Handler $controller)
     {
         $controller->register_hook('DOKUWIKI_STARTED', 'AFTER', $this, 'set_data', array());
         $controller->register_hook('RPC_CALL_ADD', 'AFTER',  $this, 'add_rpc_all');
